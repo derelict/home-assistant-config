@@ -1,0 +1,470 @@
+################################################################################################
+# Treppenhaus
+################################################################################################
+
+stairways:
+    name: Treppenhaus
+    view: yes
+    entities:
+        - group.stairways_motion
+        - group.stairways_light
+        - binary_sensor.ug_gang_motion_sensor
+        - binary_sensor.eg_gang_motion_sensor
+        - binary_sensor.1st_gang_motion_sensor
+        - binary_sensor.dach_gang_motion_sensor
+        - switch.ug_gang_licht_switch
+        - switch.eg_gang_licht_switch
+        - switch.1st_gang_licht_switch
+        - switch.dach_gang_licht_switch
+
+stairways_motion:
+    name: Motion Sensors
+    entities:
+        - binary_sensor.ug_gang_motion_sensor
+        - binary_sensor.eg_gang_motion_sensor
+        - binary_sensor.1st_gang_motion_sensor
+        - binary_sensor.dach_gang_motion_sensor
+        
+stairways_light:
+    name: Light
+    entities:
+        - switch.ug_gang_licht_switch
+        - switch.eg_gang_licht_switch
+        - switch.1st_gang_licht_switch
+        - switch.dach_gang_licht_switch
+
+    
+
+################################################################################################
+# Untergeschoss
+################################################################################################
+
+og:
+    name: Untergeschoss
+    view: yes
+    entities:
+        - group.heizung
+        - group.waschkueche
+        - group.salon
+        - group.werkstatt
+
+##########################################################
+# Waschküche
+##########################################################
+
+waschkueche:
+    name: Waschküche
+    entities:
+        - switch.waschkueche_licht_switch
+        - binary_sensor.waschkueche_multisensor_sensor
+        - sensor.waschkueche_multisensor_luminance
+        - sensor.waschkueche_multisensor_relative_humidity
+        - sensor.waschkueche_multisensor_temperature
+        - binary_sensor.waschkueche_floodsensor_sensor
+        - binary_sensor.ug_waschkueche_flood_flood
+        - binary_sensor.ug_waschkueche_flood_sensor
+        - binary_sensor.ug_waschkueche_flood_general
+        - sensor.ug_waschkueche_flood_temperature
+
+##########################################################
+# Heizung
+##########################################################
+
+heizung:
+    name: Heizung
+    entities:
+        - binary_sensor.heizung_multisensor_sensor
+        - switch.heizung_licht_switch
+        - lock.garage_
+        - switch.garage_door
+        - sensor.heizung_multisensor_luminance
+        - sensor.heizung_multisensor_relative_humidity
+        - sensor.heizung_multisensor_temperature
+
+##########################################################
+# Salon
+##########################################################
+    
+salon:
+    name: Salon
+    entities:
+        - binary_sensor.salon_multisensor_sensor
+        - media_player.jason_home
+        - switch.salon_licht_decke_switch
+        - switch.salon_licht_spiegel_switch
+        - sensor.salon_multisensor_luminance
+        - sensor.salon_multisensor_relative_humidity
+        - sensor.salon_multisensor_temperature    
+
+##########################################################
+# Werkstatt
+##########################################################
+
+werkstatt:
+    name: Werkstatt
+    entities:
+        - media_player.spotify 
+        - group.mediapc_state
+        - group.werkstatt_lights
+        - group.werkstatt_lipo_charger
+
+mediapc_state:
+    name: Workstation State
+    entities:
+        - binary_sensor.werkstatt_motion_sensor_sensor
+        - input_boolean.pc_power
+        - binary_sensor.pc_idle_state
+        - binary_sensor.pc_video_app_state
+        - switch.pc_default_music
+        
+werkstatt_lights:
+    name: Werkstatt Licht
+    entities:
+        - switch.werkstatt_decken_licht_switch
+        - switch.werkstatt_pult_licht_switch
+        - switch.werkstatt_pult_licht_switch_2
+        
+werkstatt_lipo_charger:
+    name: LIPO Charger State
+    entities:
+        - switch.werkstatt_charger_switch_switch
+        - sensor.werkstatt_charger_switch_power
+        - input_boolean.werstatt_charger_active
+
+################################################################################################
+# Erdgeschoss
+################################################################################################
+
+eg:
+    name: Erdgeschoss
+    view: yes
+    entities:
+        - group.stube
+        - group.kuche
+        - group.terasse
+        - group.eg_bad
+        - group.kammer
+
+##########################################################
+# Stube
+##########################################################
+
+stube:
+    name: Stube
+    entities:
+        - media_player.spotify
+        - group.shield_01_states
+        - group.stube_lights
+        - group.stube_heater
+        - binary_sensor.stube_motion
+        - binary_sensor.stube_someone_known
+        - binary_sensor.stube_someone_unknown
+        - binary_sensor.zipatile_motion
+        - binary_sensor.eg_stube_motion_sensor
+        - sensor.zipatile_humidity
+        - sensor.zipatile_luminance
+        - sensor.zipatile_temperature
+        - camera.stube
+        - media_player.stube
+        - media_player.stube_home
+        - sensor.netatmo_innenraum_co2
+        - sensor.netatmo_innenraum_humidity
+        - sensor.netatmo_innenraum_noise
+        - sensor.netatmo_innenraum_pressure
+        - sensor.netatmo_innenraum_temperature
+        - sensor.netatmo_innenraum_wifi
+        - input_boolean.eg_stube_tv
+        - input_boolean.eg_stube_soundbar
+        - image_processing.frontdoor_camera
+        - climate.stube_heizung
+        - sensor.eg_stube_motion_sensor_temperature
+
+stube_heater:
+    name: Stube Heizung Switches
+    entities:
+        - switch.ug_heizung_stube_switch_2
+        - switch.ug_heizung_stube_switch
+        
+stube_lights:
+    name: Stube Licht
+    entities:
+        - switch.eg_stube_licht_1_switch
+        - switch.eg_stube_licht_1_switch_2
+        - switch.eg_stube_licht_2_switch
+        - switch.eg_stube_licht_2_switch_2
+
+shield_01_states:
+        name: Stube Shield States
+        entities:
+            - sensor.shield_01_app_name
+            - sensor.shield_01_video_playback
+            - switch.shield_01_power
+            - sensor.shield_01_focused_app
+            - sensor.shield_01_focused_window
+            - sensor.shield_01_display_state
+            - sensor.shield_01_power_state
+            - sensor.shield_01_wake_state
+            - sensor.shield_01_wakelocks
+
+##########################################################
+# Küche
+##########################################################
+
+kuche:
+    name: Küche
+    entities:
+        - binary_sensor.eg_kueche_flood_sensor
+        - switch.eg_kueche_licht_links_switch
+        - switch.eg_kueche_licht_rechts_switch
+        - binary_sensor.eg_kueche_motion_sensor
+        - sensor.eg_kueche_smoke_temperature
+
+
+##########################################################
+# Terasse
+##########################################################
+
+terasse:
+    name: Terasse
+    entities:
+        - switch.eg_stube_balkon_switch
+
+##########################################################
+# Bad
+##########################################################
+
+eg_bad:
+    name: Bad
+    entities:
+        - binary_sensor.eg_bad_motion_sensor
+        - switch.eg_bad_licht_switch
+
+##########################################################
+# Kammer
+##########################################################
+
+kammer:
+    name: Kammer
+    entities:
+        - binary_sensor.eg_kammer_motion_sensor
+        - switch.eg_kammer_licht_switch
+
+
+################################################################################################
+# Erster Stock
+################################################################################################
+
+1st:
+    name: 1er Stock
+    view: yes
+    entities:
+        - group.mediaroom
+        - group.1st_bad
+        - group.leona
+        - group.jason
+
+##########################################################
+# Mediaroom
+##########################################################
+
+mediaroom:
+    name: Mediaroom
+    entities:
+        - binary_sensor.1st_media_motion_sensor
+        - sensor.1st_media_motion_luminance
+        - sensor.1st_media_motion_relative_humidity
+        - sensor.1st_media_motion_temperature
+        - light.1st_mediaroom_licht_level
+        - media_player.mediazimmer
+        - media_player.mediazimmer_home
+        - media_player.mediaroom_avr_player
+        - input_boolean.1st_mediaroom_beamer
+        - group.shield_02_states
+
+shield_02_states:
+        name: Mediaroom Shield States
+        entities:
+            - sensor.shield_02_app_name
+            - sensor.shield_02_video_playback
+            - switch.shield_02_power
+            - sensor.shield_02_focused_app
+            - sensor.shield_02_focused_window
+            - sensor.shield_02_display_state
+            - sensor.shield_02_power_state
+            - sensor.shield_02_wake_state
+            - sensor.shield_02_wakelocks
+
+##########################################################
+# Bad
+##########################################################
+
+1st_bad:
+    name: Bad
+    entities:
+        - binary_sensor.1st_bad_motion_sensor
+        - sensor.1st_bad_motion_luminance
+        - sensor.1st_bad_motion_relative_humidity
+        - sensor.1st_bad_motion_temperature
+        - switch.1st_bad_licht_switch
+        - switch.1st_bad_licht_switch_2
+        - switch.1st_bad_licht_switch_3
+
+##########################################################
+# Leona
+##########################################################
+
+leona:
+    name: Leona
+    entities:
+        - light.1st_leona_level
+
+##########################################################
+# Jason
+##########################################################
+
+jason:
+    name: Jason
+    entities:
+        - switch.1st_jason_licht_switch
+        - media_player.jason_home
+
+################################################################################################
+# DACH
+################################################################################################
+
+dach:
+    name: Dach
+    view: yes
+    entities:
+        - group.dach_estrich
+        - group.dach_schlaf
+        - group.dach_bad
+        - group.dach_kleider
+        - group.dach_schlaf_alarm
+
+##########################################################
+# Estrich
+##########################################################
+
+dach_estrich:
+    name: Estrich
+    entities:
+        - switch.dach_estrich_switch
+
+##########################################################
+# Schlafzimmer
+##########################################################
+
+dach_schlaf:
+    name: Schlafzimmer
+    entities:
+        - binary_sensor.dach_schlaf_motion_sensor
+        - sensor.dach_schlaf_motion_luminance
+        - sensor.dach_schlaf_motion_relative_humidity
+        - sensor.dach_schlaf_motion_temperature
+        - light.dach_schlaf_licht_level
+        - media_player.schlafzimmer
+        - media_player.schlafzimmer_home
+        - input_boolean.dach_schlaf_tv
+        - input_boolean.dach_schlaf_soundbar
+        - input_boolean.dach_schlaf_climate
+        - climate.schlafzimmer_heizung
+        - climate.schlafzimmer_kuhlung
+        - group.shield_03_states
+
+
+shield_03_states:
+        name: Schlafzimmer Shield States
+        entities:
+            - sensor.shield_03_app_name
+            - sensor.shield_03_video_playback
+            - switch.shield_03_power
+            - sensor.shield_03_focused_app
+            - sensor.shield_03_focused_window
+            - sensor.shield_03_display_state
+            - sensor.shield_03_power_state
+            - sensor.shield_03_wake_state
+            - sensor.shield_03_wakelocks
+
+##########################################################
+# Bad
+##########################################################
+
+dach_bad:
+    name: Bad
+    entities:
+        - binary_sensor.dach_bad_motion_sensor
+        - switch.dach_bad_licht_switch
+        - switch.dach_bad_licht_switch_2
+        - media_player.badzimmer_home
+        - input_select.radio_station_schlafbad
+
+##########################################################
+# Kleiderschrank
+##########################################################
+
+dach_kleider:
+    name: Kleiderschrank
+    entities:
+        - binary_sensor.dach_kleider_motion_sensor
+        - switch.dach_kleider_licht_switch
+
+
+################################################################################################
+# Misc
+################################################################################################
+
+house_people:
+    name: House People
+    view: yes
+    entities:
+      - device_tracker.oeusqgsv_marcel
+      - device_tracker.galaxys8
+      - device_tracker.samsunggalaxys7edge
+      - proximity.marcel_to_home
+      - sensor.marcel_to_home
+      - sensor.marcel_to_work
+
+            
+dark_sky:
+    name: Dark Sky
+    entities:
+       - sensor.dark_sky_apparent_temperature
+       - sensor.dark_sky_cloud_coverage
+       - sensor.dark_sky_daily_high_apparent_temperature
+       - sensor.dark_sky_daily_high_temperature
+       - sensor.dark_sky_daily_low_apparent_temperature
+       - sensor.dark_sky_daily_low_temperature
+       - sensor.dark_sky_daily_max_precip_intensity
+       - sensor.dark_sky_daily_summary
+       - sensor.dark_sky_dew_point
+       - sensor.dark_sky_hourly_summary
+       - sensor.dark_sky_humidity
+       - sensor.dark_sky_icon
+       - sensor.dark_sky_minutely_summary
+       - sensor.dark_sky_nearest_storm_distance
+       - sensor.dark_sky_precip
+       - sensor.dark_sky_precip_accumulation
+       - sensor.dark_sky_precip_intensity
+       - sensor.dark_sky_precip_probability
+       - sensor.dark_sky_summary
+       - sensor.dark_sky_temperature
+       - sensor.dark_sky_wind_speed
+       - sensor.dark_sky_visibility
+            
+################################################################################################
+# Aussen
+################################################################################################
+
+outside:
+    name: Aussen
+    view: yes
+    entities:
+        - switch.out_pool_switch_switch
+        - switch.out_pool_switch_switch_2
+        - sensor.netatmo_aussenraum_temperature
+        - sensor.netatmo_aussenraum_humidity
+        - sensor.netatmo_aussenraum_radio
+        - sensor.netatmo_aussenraum_battery
+        
+

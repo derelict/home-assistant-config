@@ -1,0 +1,14 @@
+"switch.*licht*":
+   icon: mdi:lightbulb 
+
+"sensor.*lumi*":
+    icon: mdi:weather-sunny
+
+"sensor.*humi*":
+    icon: mdi:water-percent
+
+"sensor.*temp*":
+    icon: mdi:thermometer
+
+"binary_sensor.*motion*":
+    icon: mdi:run

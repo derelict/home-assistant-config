@@ -1,0 +1,17 @@
+- name: Marcel Work
+  latitude: !secret marcel_work_lat
+  longitude: !secret marcel_work_lon
+  icon: mdi:briefcase
+    
+- name: Marcel Work Large
+  latitude: !secret marcel_work_large_lat
+  longitude: !secret marcel_work_large_lon
+  radius: 250
+  icon: mdi:briefcase
+
+- name: Marcel Home Large
+  latitude: !secret marcel_home_large_lat
+  longitude: !secret marcel_home_large_lon
+  radius: 250
+  icon: mdi:home
+    

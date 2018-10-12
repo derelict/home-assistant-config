@@ -1,0 +1,13 @@
+input_select:
+  radio_station_schlafbad:
+    name: 'Select Radio Station:'
+    options:
+      - Radio FM1
+      - Sky.fm Rock
+      - DI.fm Vocal Trance
+    initial: Radio FM1
+    icon: mdi:radio
+
+input_boolean:
+  testswitch:
+    name: Testing Switch

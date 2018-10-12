@@ -1,0 +1,359 @@
+##############################################################################################################################
+# INPUT BOOLEAN
+##############################################################################################################################
+
+input_boolean:
+
+###############################################################
+# STUBE
+###############################################################
+
+  eg_stube_tv:
+    name: TV
+
+  eg_stube_soundbar:
+    name: Soundbar
+
+###############################################################
+# MEDIAROOM
+###############################################################
+
+  1st_mediaroom_beamer:
+    name: Beamer
+
+###############################################################
+# SCHLAFZIMMER
+###############################################################
+
+  dach_schlaf_climate:
+    name: Klima
+
+  dach_schlaf_tv:
+    name: TV
+
+  dach_schlaf_soundbar:
+    name: Soundbar
+
+##############################################################################################################################
+# BASIC AUTOMATION (Turn OFF and ON and select INPUTS where neccessary)
+##############################################################################################################################
+
+automation:
+
+###############################################################
+# STUBE
+###############################################################
+
+#######################################
+# SHIELD POWER Handling/Tracking
+#######################################
+
+  - alias: Shield 01 ON Handling
+    trigger:
+      platform: state
+      entity_id: switch.shield_01_power
+      to: 'on'
+    action:
+    - service: input_boolean.turn_on
+      entity_id: 
+        - input_boolean.eg_stube_tv
+        - input_boolean.eg_stube_soundbar
+
+  - alias: Shield 01 OFF Handling
+    trigger:
+      platform: state
+      entity_id: switch.shield_01_power
+      to: 'off'
+    action:
+    - service: input_boolean.turn_off
+      entity_id: 
+        - input_boolean.eg_stube_tv
+        - input_boolean.eg_stube_soundbar
+
+#######################################
+# SHIELD FULL SCREEN VIDEO LIGHT CONTROL
+#######################################
+
+  - alias: Shield 01 Video Playback ON Handling
+    trigger:
+      platform: state
+      entity_id: sensor.shield_01_video_playback
+      to: 'on'
+    action:
+    - service: homeassistant.turn_off
+      entity_id: 
+        - switch.eg_stube_licht_1_switch
+
+  - alias: Shield 01 Video Playback OFF Handling
+    trigger:
+      platform: state
+      entity_id: sensor.shield_01_video_playback
+      to: 'off'
+    action:
+    - service: homeassistant.turn_on
+      entity_id: 
+        - switch.eg_stube_licht_1_switch
+
+#######################################
+# TV
+#######################################
+
+  - alias: Turn Stube TV ON
+    trigger:
+      platform: state
+      entity_id: input_boolean.eg_stube_tv
+      to: 'on'
+    action:
+    - service: mqtt.publish
+      data:
+        topic: "/rpi_support/mediapc01/sendir/samsung"
+        payload: "KEY_BLUE"   
+    - service: mqtt.publish
+      data:
+        topic: "/rpi_support/mediapc01/sendir/samsung"
+        payload: "BTN_TOP" 
+
+  - alias: Turn Stube TV OFF
+    trigger:
+      platform: state
+      entity_id: input_boolean.eg_stube_tv
+      to: 'off'
+    action:
+    - service: mqtt.publish
+      data:
+        topic: "/rpi_support/mediapc01/sendir/samsung"
+        payload: "KEY_GREEN"   
+
+#######################################
+# SOUNDBAR
+#######################################
+
+  - alias: Turn Stube Soundbar ON
+    trigger:
+      platform: state
+      entity_id: input_boolean.eg_stube_soundbar
+      to: 'on'
+    action:
+    - service: mqtt.publish
+      data:
+        topic: "/rpi_support/mediapc01/sendir/soundbar"
+        payload: "BTN_TOUCH"   
+    - service: mqtt.publish
+      data:
+        topic: "/rpi_support/mediapc01/sendir/soundbar"
+        payload: "BTN_TOP" 
+
+  - alias: Turn Stube Soundbar OFF
+    trigger:
+      platform: state
+      entity_id: input_boolean.eg_stube_soundbar
+      to: 'off'
+    action:
+    - service: mqtt.publish
+      data:
+        topic: "/rpi_support/mediapc01/sendir/soundbar"
+        payload: "BTN_TR" 
+
+###############################################################
+# MEDIAROOM
+###############################################################
+
+#######################################
+# SHIELD POWER Handling/Tracking
+#######################################
+
+  - alias: Shield 02 ON Handling
+    trigger:
+      platform: state
+      entity_id: switch.shield_02_power
+      to: 'on'
+    action:
+    - service: input_boolean.turn_on
+      entity_id: 
+        - input_boolean.1st_mediaroom_beamer
+    - service: media_player.turn_on
+      data:
+        entity_id: media_player.mediaroom_avr_player
+    - service: media_player.select_source
+      data:
+        entity_id: media_player.mediaroom_avr_player
+        source: "BD"
+
+  - alias: Shield 02 OFF Handling
+    trigger:
+      platform: state
+      entity_id: switch.shield_02_power
+      to: 'off'
+    action:
+    - service: input_boolean.turn_off
+      entity_id: 
+        - input_boolean.1st_mediaroom_beamer
+    - service: media_player.turn_off
+      data:
+        entity_id: media_player.mediaroom_avr_player
+
+#######################################
+# BEAMER
+#######################################
+
+  - alias: Turn Mediaroom Beamer ON
+    trigger:
+      platform: state
+      entity_id: input_boolean.1st_mediaroom_beamer
+      to: 'on'
+    action:
+    - service: mqtt.publish
+      data:
+        topic: "/rpi_support/mediapc02/sendserial"
+        payload: "pow=on"   
+
+  - alias: Turn Mediaroom Beamer OFF
+    trigger:
+      platform: state
+      entity_id: input_boolean.1st_mediaroom_beamer
+      to: 'off'
+    action:
+    - service: mqtt.publish
+      data:
+        topic: "/rpi_support/mediapc02/sendserial"
+        payload: "pow=off"   
+
+#######################################
+# SHIELD FULL SCREEN VIDEO LIGHT CONTROL
+#######################################
+
+  - alias: Shield 02 Video Playback ON Handling
+    trigger:
+      platform: state
+      entity_id: sensor.shield_02_video_playback
+      to: 'on'
+    action:
+      service: light.turn_off
+      entity_id: light.1st_mediaroom_licht_level
+
+  - alias: Shield 02 Video Playback OFF Handling
+    trigger:
+      platform: state
+      entity_id: sensor.shield_02_video_playback
+      to: 'off'
+    action:
+      service: light.turn_on
+      data:
+        entity_id: light.1st_mediaroom_licht_level
+        brightness: 255
+
+###############################################################
+# SCHLAFZIMMER
+###############################################################
+
+#######################################
+# SHIELD POWER Handling/Tracking
+#######################################
+
+  - alias: Shield 03 ON Handling
+    trigger:
+      platform: state
+      entity_id: switch.shield_03_power
+      to: 'on'
+    action:
+    - service: input_boolean.turn_on
+      entity_id: 
+        - input_boolean.dach_schlaf_tv
+        - input_boolean.dach_schlaf_soundbar
+
+  - alias: Shield 03 OFF Handling
+    trigger:
+      platform: state
+      entity_id: switch.shield_03_power
+      to: 'off'
+    action:
+    - service: input_boolean.turn_off
+      entity_id: 
+        - input_boolean.dach_schlaf_tv
+        - input_boolean.dach_schlaf_soundbar
+
+#######################################
+# TV
+#######################################
+
+  - alias: Turn Schlafzimmer TV ON
+    trigger:
+      platform: state
+      entity_id: input_boolean.dach_schlaf_tv
+      to: 'on'
+    action:
+    - service: mqtt.publish
+      data:
+        topic: "/rpi_support/mediapc03/sendir/samsung"
+        payload: "KEY_BLUE"   
+    - service: mqtt.publish
+      data:
+        topic: "/rpi_support/mediapc03/sendir/samsung"
+        payload: "BTN_TOP2" 
+
+  - alias: Turn Schlafzimmer TV OFF
+    trigger:
+      platform: state
+      entity_id: input_boolean.dach_schlaf_tv
+      to: 'off'
+    action:
+    - service: mqtt.publish
+      data:
+        topic: "/rpi_support/mediapc03/sendir/samsung"
+        payload: "KEY_GREEN"   
+
+#######################################
+# SOUNDBAR
+#######################################
+
+  - alias: Turn Schlafzimmer Soundbar ON
+    trigger:
+      platform: state
+      entity_id: input_boolean.dach_schlaf_soundbar
+      to: 'on'
+    action:
+    - service: mqtt.publish
+      data:
+        topic: "/rpi_support/mediapc03/sendir/soundbar"
+        payload: "BTN_TOUCH"   
+    - service: mqtt.publish
+      data:
+        topic: "/rpi_support/mediapc03/sendir/soundbar"
+        payload: "BTN_TOP2" 
+
+  - alias: Turn Schlafzimmer Soundbar OFF
+    trigger:
+      platform: state
+      entity_id: input_boolean.dach_schlaf_soundbar
+      to: 'off'
+    action:
+    - service: mqtt.publish
+      data:
+        topic: "/rpi_support/mediapc03/sendir/soundbar"
+        payload: "BTN_TR" 
+
+#######################################
+# CLIMATE
+#######################################
+
+  - alias: Turn Schlafzimmer Climate ON
+    trigger:
+      platform: state
+      entity_id: input_boolean.dach_schlaf_climate
+      to: 'on'
+    action:
+    - service: mqtt.publish
+      data:
+        topic: "/rpi_support/mediapc03/sendir/climate"
+        payload: "KEY_BLUE"   
+
+  - alias: Turn Schlafzimmer Climate OFF
+    trigger:
+      platform: state
+      entity_id: input_boolean.dach_schlaf_climate
+      to: 'off'
+    action:
+    - service: mqtt.publish
+      data:
+        topic: "/rpi_support/mediapc03/sendir/climate"
+        payload: "KEY_GREEN" 

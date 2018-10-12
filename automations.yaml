@@ -1,0 +1,995 @@
+
+
+- alias: Motion Alert ON
+  trigger:
+      - platform: state
+        entity_id: 
+          - binary_sensor.dach_gang_motion_sensor
+          - binary_sensor.1st_gang_motion_sensor
+          - binary_sensor.dach_schlaf_motion_sensor
+          - binary_sensor.dach_bad_motion_sensor
+          - binary_sensor.ug_gang_motion_sensor
+        to: 'on'      
+  action:
+      - service: mqtt.publish
+        data:
+          topic: "/eg/alert/motion"
+          payload: "ON"
+
+
+- alias: Motion Alert OFF
+  trigger:
+      - platform: state
+        entity_id: 
+          - binary_sensor.dach_gang_motion_sensor
+          - binary_sensor.1st_gang_motion_sensor
+          - binary_sensor.dach_schlaf_motion_sensor
+          - binary_sensor.dach_bad_motion_sensor
+          - binary_sensor.ug_gang_motion_sensor
+        to: 'off'      
+  action:
+      - service: mqtt.publish
+        data:
+          topic: "/eg/alert/motion"
+          payload: "OFF"
+
+###################################################################
+# Waschküche
+###################################################################
+
+- alias: Turn on waschkueche light when there is movement
+  trigger:
+    platform: state
+    entity_id: binary_sensor.waschkueche_multisensor_sensor
+    to: 'on'
+  action:
+    service: homeassistant.turn_on
+    entity_id: switch.waschkueche_licht_switch
+
+- alias: Turn off waschkueche light after last movement
+  trigger:
+    platform: state
+    entity_id: binary_sensor.waschkueche_multisensor_sensor
+    to: 'off'
+    for:
+      minutes: 1
+  action:
+    service: homeassistant.turn_off
+    entity_id: switch.waschkueche_licht_switch
+
+###################################################################
+# Heizung
+###################################################################
+
+- alias: Turn on Heizung light when there is movement
+  trigger:
+    platform: state
+    entity_id: binary_sensor.heizung_multisensor_sensor
+    to: 'on'
+  action:
+  - service: homeassistant.turn_on
+    entity_id: switch.heizung_licht_switch
+  - service: lock.unlock
+    entity_id: lock.garage_
+
+- alias: Turn off Heizung light after last movement
+  trigger:
+    platform: state
+    entity_id: binary_sensor.heizung_multisensor_sensor
+    to: 'off'
+    for:
+      minutes: 1
+  action:
+  - service: homeassistant.turn_off
+    entity_id: switch.heizung_licht_switch
+  - service: lock.lock
+    entity_id: lock.garage_
+
+
+- alias: Unlock Garage on Presence
+  trigger:
+    - platform: zone
+      entity_id: device_tracker.oeusqgsv_marcel
+      zone: zone.home
+      event: enter
+    - platform: zone
+      entity_id: device_tracker.oeusqgsv_marcel
+      zone: zone.marcel_home_large
+      event: enter
+  action:
+  - service: lock.unlock
+    entity_id: lock.garage_
+  - service: homeassistant.turn_on
+    entity_id: switch.garage_door
+
+- alias: Re-Lock After unlock
+  trigger:
+    platform: state
+    entity_id: lock.garage_
+    to: 'unlocked'
+    for:
+      minutes: 10
+  action:
+  - service: lock.lock
+    entity_id: lock.garage_
+
+
+###################################################################
+# Salon
+###################################################################
+
+- alias: Turn on Salon light when there is movement
+  trigger:
+    platform: state
+    entity_id: binary_sensor.salon_multisensor_sensor
+    to: 'on'
+  action:
+  - service: homeassistant.turn_on
+    entity_id: switch.salon_licht_decke_switch
+  - service: homeassistant.turn_on
+    entity_id: switch.salon_licht_spiegel_switch
+  - service: media_player.play_media
+    data:
+        entity_id: media_player.jason_home
+        media_content_id: http://radiofm1.ice.infomaniak.ch/radiofm1-128.mp3
+        media_content_type: 'music'
+        
+- alias: Turn off Salon light after last movement
+  trigger:
+    platform: state
+    entity_id: binary_sensor.salon_multisensor_sensor
+    to: 'off'
+    for:
+      minutes: 1
+  action:
+  - service: homeassistant.turn_off
+    entity_id: switch.salon_licht_decke_switch
+  - service: homeassistant.turn_off
+    entity_id: switch.salon_licht_spiegel_switch
+  - service: media_player.media_stop
+    data:
+        entity_id: media_player.jason_home
+
+        
+        
+###################################################################
+# Werkstatt
+###################################################################
+
+##########################################
+# Media PC Power Control
+##########################################
+
+- alias: Turn on Werkstatt Media PC
+  trigger:
+    platform: state
+    entity_id: input_boolean.pc_power
+    to: 'on'
+  action:
+  - service: wake_on_lan.send_magic_packet
+    data:
+      mac: D0-50-99-27-01-C2
+      broadcast_address: 10.2.255.255
+
+      
+- alias: Turn OFF Werkstatt Media PC
+  trigger:
+    platform: state
+    entity_id: input_boolean.pc_power
+    to: 'off'
+  action:
+  - service: mqtt.publish
+    data:
+      topic: "/eg/state/werkstatt/power/set"
+      payload: "off"
+
+##########################################
+# Mediapc Power Tracking
+##########################################
+
+- alias: Track Media PC ON MQTT
+  trigger:
+    platform: mqtt
+    topic: /eg/state/werkstatt/power
+    payload: 'on'
+  action:
+    service: homeassistant.turn_on
+    entity_id: input_boolean.pc_power  
+
+- alias: Track Media PC OFF MQTT
+  trigger:
+    platform: mqtt
+    topic: /eg/state/werkstatt/power
+    payload: 'off'
+  action:
+    service: homeassistant.turn_off
+    entity_id: input_boolean.pc_power  
+
+##########################################
+# General Motion and Idle Controll
+##########################################
+    
+- alias: Turn Werkstatt System ON
+  trigger:
+      - platform: state
+        entity_id: binary_sensor.werkstatt_motion_sensor_sensor
+        to: 'on'
+      - platform: state
+        entity_id: switch.werkstatt_decken_licht_switch
+        to: 'on'
+      - platform: state
+        entity_id: binary_sensor.pc_idle_state
+        to: 'on'
+  condition:
+    condition: state
+    entity_id: binary_sensor.pc_video_app_state
+    state: 'off'
+  action:
+       - service: homeassistant.turn_on
+         entity_id: switch.werkstatt_decken_licht_switch
+       - service: homeassistant.turn_on
+         entity_id: switch.werkstatt_pult_licht_switch    
+       - service: homeassistant.turn_on
+         entity_id: switch.werkstatt_pult_licht_switch_2    
+       - service: homeassistant.turn_on
+         entity_id: input_boolean.pc_power  
+       - service: homeassistant.turn_on
+         entity_id: switch.pc_default_music
+        
+- alias: Turn Werkstatt System OFF
+  trigger:
+      - platform: state
+        entity_id: binary_sensor.werkstatt_motion_sensor_sensor
+        to: 'off'
+      - platform: state
+        entity_id: switch.werkstatt_decken_licht_switch
+        to: 'off'
+      - platform: state
+        entity_id: binary_sensor.pc_idle_state
+        to: 'off'
+  condition: 
+    condition: and
+    conditions:
+      - condition: state
+        entity_id: binary_sensor.werkstatt_motion_sensor_sensor
+        state: 'off'
+      - condition: state
+        entity_id: binary_sensor.pc_idle_state
+        state: 'off'
+      - condition: state
+        entity_id: binary_sensor.pc_video_app_state
+        state: 'off'        
+  action:
+      - service: homeassistant.turn_off
+        entity_id: switch.pc_default_music
+      - service: homeassistant.turn_off
+        entity_id: switch.werkstatt_decken_licht_switch
+      - service: homeassistant.turn_off
+        entity_id: switch.werkstatt_pult_licht_switch    
+      - service: homeassistant.turn_off
+        entity_id: switch.werkstatt_pult_licht_switch_2 
+      - service: homeassistant.turn_off
+        entity_id: input_boolean.pc_power  
+
+##########################################
+# Movie Handling
+##########################################
+        
+- alias: Werkstatt Movie Play ON
+  trigger:
+      - platform: state
+        entity_id: binary_sensor.pc_video_app_state
+        to: 'on'
+  action:
+      - service: homeassistant.turn_off
+        entity_id: switch.werkstatt_decken_licht_switch
+      - service: homeassistant.turn_off
+        entity_id: switch.werkstatt_pult_licht_switch    
+      - service: homeassistant.turn_off
+        entity_id: switch.werkstatt_pult_licht_switch_2 
+      - service: homeassistant.turn_off
+        entity_id: switch.pc_default_music  
+  
+- alias: Werkstatt Movie Play OFF
+  trigger:
+    platform: state
+    entity_id: binary_sensor.pc_video_app_state
+    to: 'off'
+  action:
+      - service: homeassistant.turn_on
+        entity_id: switch.werkstatt_decken_licht_switch
+      - service: homeassistant.turn_on
+        entity_id: switch.werkstatt_pult_licht_switch    
+      - service: homeassistant.turn_on
+        entity_id: switch.werkstatt_pult_licht_switch_2  
+      - service: homeassistant.turn_on
+        entity_id: switch.pc_default_music  
+    
+##########################################
+# Charge Notification handling
+##########################################
+
+- alias: Werkstatt Report Charging ON
+  trigger:
+        platform: numeric_state
+        entity_id: sensor.werkstatt_charger_switch_power
+        above: 40
+        for:
+            minutes: 1
+  action:
+        service: homeassistant.turn_on
+        entity_id: input_boolean.werstatt_charger_active
+  
+- alias: Werkstatt Report Charging OFF
+  trigger:
+        platform: numeric_state
+        entity_id: sensor.werkstatt_charger_switch_power
+        below: 80
+        for:
+            minutes: 1
+  action:
+        service: homeassistant.turn_off
+        entity_id: input_boolean.werstatt_charger_active
+        
+    
+################################################################################################
+# Treppenhaus
+################################################################################################
+
+##########################################
+# UG Light Control
+##########################################  
+    
+- alias: turn UG light on
+  trigger:
+      - platform: state
+        entity_id: binary_sensor.ug_gang_motion_sensor
+        to: 'on'
+      - platform: state
+        entity_id: binary_sensor.eg_gang_motion_sensor
+        to: 'on'
+      - platform: state
+        entity_id: binary_sensor.heizung_multisensor_sensor
+        to: 'on'      
+  action:
+      - service: homeassistant.turn_on
+        entity_id: switch.ug_gang_licht_switch
+
+- alias: turn UG light off
+  trigger:
+      - platform: state
+        entity_id: binary_sensor.ug_gang_motion_sensor
+        to: 'off'
+      - platform: state
+        entity_id: binary_sensor.eg_gang_motion_sensor
+        to: 'off'
+      - platform: state
+        entity_id: binary_sensor.heizung_multisensor_sensor
+        to: 'off'
+
+  condition: 
+    condition: and
+    conditions:
+      - condition: state
+        entity_id: binary_sensor.ug_gang_motion_sensor
+        state: 'off'
+      - condition: state
+        entity_id: binary_sensor.eg_gang_motion_sensor
+        state: 'off'
+      - condition: state
+        entity_id: binary_sensor.heizung_multisensor_sensor
+        state: 'off'        
+  action:
+      - service: homeassistant.turn_off
+        entity_id: switch.ug_gang_licht_switch    
+
+##########################################
+# EG Light Control
+##########################################  
+    
+- alias: turn EG light on
+  trigger:
+      - platform: state
+        entity_id: binary_sensor.ug_gang_motion_sensor
+        to: 'on'
+      - platform: state
+        entity_id: binary_sensor.eg_gang_motion_sensor
+        to: 'on'
+      - platform: state
+        entity_id: binary_sensor.1st_gang_motion_sensor
+        to: 'on'      
+  action:
+      - service: homeassistant.turn_on
+        entity_id: switch.eg_gang_licht_switch
+
+- alias: turn EG light off
+  trigger:
+      - platform: state
+        entity_id: binary_sensor.ug_gang_motion_sensor
+        to: 'off'
+      - platform: state
+        entity_id: binary_sensor.eg_gang_motion_sensor
+        to: 'off'
+      - platform: state
+        entity_id: binary_sensor.1st_gang_motion_sensor
+        to: 'off'
+
+  condition: 
+    condition: and
+    conditions:
+      - condition: state
+        entity_id: binary_sensor.ug_gang_motion_sensor
+        state: 'off'
+      - condition: state
+        entity_id: binary_sensor.eg_gang_motion_sensor
+        state: 'off'
+      - condition: state
+        entity_id: binary_sensor.1st_gang_motion_sensor
+        state: 'off'        
+  action:
+      - service: homeassistant.turn_off
+        entity_id: switch.eg_gang_licht_switch          
+
+
+##########################################
+# 1ST Light Control
+##########################################  
+    
+- alias: turn 1st light on
+  trigger:
+      - platform: state
+        entity_id: 
+          - binary_sensor.dach_gang_motion_sensor
+          - binary_sensor.eg_gang_motion_sensor
+          - binary_sensor.1st_gang_motion_sensor
+        to: 'on'
+  action:
+      - service: homeassistant.turn_on
+        entity_id: switch.1st_gang_licht_switch
+
+- alias: turn 1st light off
+  trigger:
+      - platform: state
+        entity_id: 
+          - binary_sensor.dach_gang_motion_sensor
+          - binary_sensor.eg_gang_motion_sensor
+          - binary_sensor.1st_gang_motion_sensor
+        to: 'off'
+        for:
+          minutes: 2
+  condition: 
+    condition: and
+    conditions:
+      - condition: state
+        entity_id: binary_sensor.dach_gang_motion_sensor
+        state: 'off'
+      - condition: state
+        entity_id: binary_sensor.eg_gang_motion_sensor
+        state: 'off'
+      - condition: state
+        entity_id: binary_sensor.1st_gang_motion_sensor
+        state: 'off'        
+  action:
+      - service: homeassistant.turn_off
+        entity_id: switch.1st_gang_licht_switch            
+
+
+##########################################
+# DACH GANG Light Control
+##########################################  
+    
+- alias: turn dach light on
+  trigger:
+      - platform: state
+        entity_id: 
+          - binary_sensor.dach_gang_motion_sensor
+          - binary_sensor.1st_gang_motion_sensor
+          - binary_sensor.dach_schlaf_motion_sensor
+        to: 'on'      
+  action:
+      - service: homeassistant.turn_on
+        entity_id: switch.dach_gang_licht_switch
+
+- alias: turn dach light off
+  trigger:
+      - platform: state
+        entity_id:
+          - binary_sensor.dach_gang_motion_sensor
+          - binary_sensor.1st_gang_motion_sensor
+          - binary_sensor.dach_schlaf_motion_sensor
+        to: 'off'
+        for:
+          minutes: 2
+  condition: 
+    condition: and
+    conditions:
+      - condition: state
+        entity_id: binary_sensor.dach_gang_motion_sensor
+        state: 'off'
+      - condition: state
+        entity_id: binary_sensor.1st_gang_motion_sensor
+        state: 'off'        
+      - condition: state
+        entity_id: binary_sensor.dach_schlaf_motion_sensor
+        state: 'off'  
+  action:
+    - service: homeassistant.turn_off
+      entity_id: switch.dach_gang_licht_switch           
+
+################################################################################################
+# DACH
+################################################################################################
+
+##########################################
+# DACH SCHLAF Light Control
+##########################################  
+
+#      - condition: numeric_state
+#        entity_id: sensor.dach_schlaf_motion_alarm_type
+#        below: 15
+
+- alias: turn dach schlaf light on
+  trigger:
+      - platform: state
+        entity_id: 
+          - binary_sensor.dach_schlaf_motion_sensor
+        to: 'on'  
+  condition:
+    condition: and
+    conditions:
+      - condition: state
+        entity_id: light.dach_schlaf_licht_level
+        state: 'off'
+  action:
+    service: light.turn_on
+    data_template:
+      entity_id: light.dach_schlaf_licht_level
+      brightness: >
+        {%- if now().strftime('%H')| int >= 21 %}
+          40
+        {%- elif now().strftime('%H')| int < 8 %}
+          40
+        {%- elif now().strftime('%H')| int >= 8 %}
+          255
+        {%- endif %}
+
+- alias: turn dach schlaf light off
+  trigger:
+      - platform: state
+        entity_id:
+          - binary_sensor.dach_schlaf_motion_sensor
+        to: 'off'
+        for:
+          minutes: 5
+  action:
+    - service: light.turn_off
+      entity_id: light.dach_schlaf_licht_level 
+
+##########################################
+# DACH SCHLAF Climate Control
+########################################## 
+
+- alias: Dach Schlaf Climate ON
+  trigger:
+    - platform: time
+      at: '18:00:00'
+  action:
+    - service: climate.set_operation_mode
+      data:
+        entity_id: climate.schlafzimmer_kuhlung
+        operation_mode: "cool"
+
+- alias: Dach Schlaf Climate OFF
+  trigger:
+    - platform: time
+      at: '07:00:00'
+  action:
+    - service: climate.set_operation_mode
+      data:
+        entity_id: climate.schlafzimmer_kuhlung
+        operation_mode: "off"
+
+##########################################
+# DACH BAD Light Control
+##########################################  
+
+#      - condition: numeric_state
+#        entity_id: sensor.dach_schlaf_motion_alarm_type
+#        below: 15
+
+- alias: Schlaf Bad Sound On Night
+  trigger:
+    - platform: state
+      entity_id:
+        - switch.dach_bad_licht_switch
+      to: 'on'
+
+  action:
+    - service: media_player.volume_set
+      data:
+        entity_id: media_player.badzimmer_home
+        volume_level: '0.3'
+
+    - service: media_player.play_media
+      data_template:
+        entity_id: media_player.badzimmer_home
+        media_content_id: >
+          {% if is_state("input_select.radio_station_schlafbad", "Radio FM1") %} http://radiofm1.ice.infomaniak.ch/radiofm1-128.mp3
+          {% elif is_state("input_select.radio_station_schlafbad", "DI.fm Vocal Trance") %} http://prem2.di.fm:80/vocaltrance?e5610542b1780e1
+          {% elif is_state("input_select.radio_station_schlafbad", "Sky.fm Rock") %} http://prem2.radiotunes.com:80/hardrock_hi?e5610542b1780e1
+          {% endif %}
+        media_content_type: 'music'
+
+- alias: Schlaf Bad Sound Volume during the Day
+  trigger:
+    - platform: state
+      entity_id:
+        - switch.dach_bad_licht_switch
+      to: 'on'
+  
+  condition:
+    condition: time
+    after: '08:00:00'
+    before: '21:00:00'
+
+  action:
+    - service: media_player.volume_set
+      data:
+        entity_id: media_player.badzimmer_home
+        volume_level: '0.5'
+
+
+
+- alias: Schlaf Bad Sound Off
+  trigger:
+    - platform: state
+      entity_id:
+        - switch.dach_bad_licht_switch
+      to: 'off'
+      
+  action:
+    - service: media_player.media_stop
+      data:
+        entity_id: media_player.badzimmer_home        
+
+
+- alias: turn dach bad light 1 on
+  trigger:
+      - platform: state
+        entity_id: 
+          - binary_sensor.dach_bad_motion_sensor
+        to: 'on'  
+  action:
+    - service: homeassistant.turn_on
+      entity_id: 
+        - switch.dach_bad_licht_switch
+
+- alias: turn dach bad light 2 on
+  trigger:
+      - platform: state
+        entity_id: 
+          - binary_sensor.dach_bad_motion_sensor
+        to: 'on'  
+  condition:
+    condition: time
+    after: '08:00:00'
+    before: '21:00:00'
+  action:
+    - service: homeassistant.turn_on
+      entity_id: 
+        - switch.dach_bad_licht_switch_2
+
+- alias: turn dach bad light off
+  trigger:
+      - platform: state
+        entity_id:
+          - binary_sensor.dach_bad_motion_sensor
+        to: 'off'
+        for:
+          minutes: 10
+  action:
+    - service: homeassistant.turn_off
+      entity_id: 
+        - switch.dach_bad_licht_switch
+        - switch.dach_bad_licht_switch_2
+
+##########################################
+# DACH Schrank Light Control
+##########################################  
+
+#      - condition: numeric_state
+#        entity_id: sensor.dach_schlaf_motion_alarm_type
+#        below: 15
+
+- alias: turn dach schrank light 1 on
+  trigger:
+      - platform: state
+        entity_id: 
+          - binary_sensor.dach_kleider_motion_sensor
+        to: 'on'  
+  action:
+    - service: homeassistant.turn_on
+      entity_id: 
+        - switch.dach_kleider_licht_switch
+
+- alias: turn dach schrank light off
+  trigger:
+      - platform: state
+        entity_id:
+          - binary_sensor.dach_kleider_motion_sensor
+        to: 'off'
+        for:
+          minutes: 3
+  action:
+    - service: homeassistant.turn_off
+      entity_id: 
+        - switch.dach_kleider_licht_switch
+
+################################################################################################
+# Erdgeschoss
+################################################################################################
+
+###################################################################
+# Kammer
+###################################################################
+
+- alias: Turn on Kammer light when there is movement
+  trigger:
+    platform: state
+    entity_id: binary_sensor.eg_kammer_motion_sensor
+    to: 'on'
+  action:
+    service: homeassistant.turn_on
+    entity_id: switch.eg_kammer_licht_switch
+
+- alias: Turn off Kammer light after last movement
+  trigger:
+    platform: state
+    entity_id: binary_sensor.eg_kammer_motion_sensor
+    to: 'off'
+    for:
+      minutes: 3
+  action:
+    service: homeassistant.turn_off
+    entity_id: switch.eg_kammer_licht_switch
+
+###################################################################
+# Bad
+###################################################################
+
+- alias: Turn on Bad light when there is movement
+  trigger:
+    platform: state
+    entity_id: binary_sensor.eg_bad_motion_sensor
+    to: 'on'
+  action:
+    service: homeassistant.turn_on
+    entity_id: switch.eg_bad_licht_switch
+
+- alias: Turn off Bad light after last movement
+  trigger:
+    platform: state
+    entity_id: binary_sensor.eg_bad_motion_sensor
+    to: 'off'
+    for:
+      minutes: 10
+  action:
+    service: homeassistant.turn_off
+    entity_id: switch.eg_bad_licht_switch
+
+
+##########################################
+# STUBE Light Control
+##########################################  
+    
+- alias: turn stube light on
+  trigger:
+      - platform: state
+        entity_id: 
+          - binary_sensor.stube_motion
+          - binary_sensor.eg_stube_motion_sensor
+          - binary_sensor.zipatile_motion
+        to: 'on'
+  action:
+      - service: homeassistant.turn_on
+        entity_id: 
+          - switch.eg_stube_licht_1_switch_2
+          - switch.eg_stube_licht_2_switch
+
+- alias: turn stube TV light on
+  trigger:
+      - platform: state
+        entity_id: 
+          - binary_sensor.stube_motion
+          - binary_sensor.eg_stube_motion_sensor
+          - binary_sensor.zipatile_motion
+        to: 'on'
+  condition:
+    condition: state
+    entity_id: sensor.shield_01_video_playback
+    state: 'off'
+  action:
+      - service: homeassistant.turn_on
+        entity_id: 
+          - switch.eg_stube_licht_1_switch
+
+
+- alias: turn stube light off
+  trigger:
+      - platform: state
+        entity_id: 
+          - binary_sensor.stube_motion
+          - binary_sensor.eg_stube_motion_sensor
+          - binary_sensor.zipatile_motion
+        to: 'off'
+        for:
+          minutes: 10
+
+  condition: 
+    condition: and
+    conditions:
+      - condition: state
+        entity_id: binary_sensor.zipatile_motion
+        state: 'off'
+      - condition: state
+        entity_id: binary_sensor.stube_motion
+        state: 'off'
+      - condition: state
+        entity_id: binary_sensor.eg_stube_motion_sensor
+        state: 'off'      
+  action:
+      - service: homeassistant.turn_off
+        entity_id: 
+          - switch.eg_stube_licht_1_switch
+          - switch.eg_stube_licht_1_switch_2
+          - switch.eg_stube_licht_2_switch
+
+
+
+##########################################
+# KUECHE Light Control
+##########################################  
+    
+- alias: turn kueche light on
+  trigger:
+      - platform: state
+        entity_id: binary_sensor.eg_kueche_motion_sensor
+        to: 'on'
+  action:
+      - service: homeassistant.turn_on
+        entity_id: 
+          - switch.eg_kueche_licht_links_switch
+          - switch.eg_kueche_licht_rechts_switch
+          - switch.eg_stube_licht_2_switch_2
+
+
+
+- alias: turn kueche light off
+  trigger:
+      - platform: state
+        entity_id: binary_sensor.eg_kueche_motion_sensor
+        to: 'off'
+        for:
+          minutes: 5
+    
+  action:
+      - service: homeassistant.turn_off
+        entity_id: 
+          - switch.eg_kueche_licht_links_switch
+          - switch.eg_kueche_licht_rechts_switch
+          - switch.eg_stube_licht_2_switch_2
+
+
+
+##########################################
+# Pool Steuerung
+##########################################  
+
+# HT: Montag - Freitag 07.00 - 19.00
+# switch.out_pool_switch_switch_2 -> Pool Pumpe
+
+- alias: Pool und Chlor Pumpe An
+  trigger:
+    - platform: time
+      at: '19:00:00'
+  action:
+    - service: homeassistant.turn_on
+      entity_id:
+        - switch.out_pool_switch_switch
+        - switch.out_pool_switch_switch_2
+
+- alias: Pool und Chlor Pumpe Aus
+  trigger:
+    - platform: time
+      at: '01:00:00'
+    - platform: state
+      entity_id: switch.out_pool_switch_switch_2
+      to: 'off'
+
+  action:
+    - service: homeassistant.turn_off
+      entity_id:
+        - switch.out_pool_switch_switch_2
+        - switch.out_pool_switch_switch
+
+#- alias: Pool Pumpe An
+#  trigger:
+#    - platform: time
+#      at: '21:30:00'
+#  action:
+#    -service: homeassistant.turn_on
+#    entity_id:
+#      - switch.out_pool_switch_switch_2
+
+
+################################################################################################
+# 1ST
+################################################################################################
+
+###################################################################
+# Bad
+###################################################################
+
+- alias: Turn on 1st Bad light when there is movement
+  trigger:
+    platform: state
+    entity_id: binary_sensor.1st_bad_motion_sensor
+    to: 'on'
+  action:
+    service: homeassistant.turn_on
+    entity_id: switch.1st_bad_licht_switch
+
+- alias: Turn off 1st Bad light after last movement
+  trigger:
+    platform: state
+    entity_id: binary_sensor.1st_bad_motion_sensor
+    to: 'off'
+    for:
+      minutes: 10
+  action:
+    service: homeassistant.turn_off
+    entity_id: switch.1st_bad_licht_switch
+
+###################################################################
+# Mediaroom
+###################################################################
+
+- alias: Turn on mediaroom light when there is movement
+  trigger:
+    platform: state
+    entity_id: binary_sensor.1st_media_motion_sensor
+    to: 'on'
+  condition:
+    condition: state
+    entity_id: sensor.shield_02_video_playback
+    state: 'off'
+  action:
+    service: light.turn_on
+    data:
+      entity_id: light.1st_mediaroom_licht_level
+      brightness: 255
+
+
+- alias: Turn off mediaroom light after last movement
+  trigger:
+    platform: state
+    entity_id: binary_sensor.1st_media_motion_sensor
+    to: 'off'
+    for:
+      minutes: 10
+  action:
+    service: light.turn_off
+    entity_id: light.1st_mediaroom_licht_level
+
+
+
+
+
+
+- alias: Enable all Automations
+  trigger:
+    platform: homeassistant
+    # Event can also be 'shutdown'
+    event: start
+  action:
+    service: automation.turn_on

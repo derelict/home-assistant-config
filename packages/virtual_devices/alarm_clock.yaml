@@ -1,0 +1,1363 @@
+# https://community.home-assistant.io/t/creating-a-alarm-clock/410/315
+
+# https://community.home-assistant.io/t/creating-a-alarm-clock/410/172
+
+# Lullaby initiates with a HTTP Post command which is send from Tasker when I lay my phone on the wireless charger next to my bed. It first
+
+# https://www.vcloudinfo.com/2017/11/building-worlds-greatest-smart-alarm.html
+
+
+
+
+#  - alias: Set alarmtime_hour
+#    trigger:
+#      platform: mqtt
+#      topic: "setHour"
+#    action:
+#       service: input_slider.select_value
+#       data_template:
+#        entity_id: input_slider.alarm_hour
+#        value: '{{ trigger.payload}}'
+#        
+#  - alias: Set alarmtime_minutes
+#    trigger:
+#      platform: mqtt
+#      topic: "setMinutes"
+#    action:
+#       service: input_slider.select_value
+#       data_template:
+#        entity_id: input_slider.alarm_minutes
+#        value: '{{ trigger.payload}}'
+
+input_boolean:
+    alarm_clock:
+      name: On/Off
+      initial: off
+      icon: mdi:alarm
+
+    work_selector:
+      name: To Work Clock
+      initial: on
+      icon: mdi:alarm      
+
+    only_week_days:
+      name: Only Week Days
+      initial: on
+      icon: mdi:alarm  
+
+input_datetime:
+   schlaf_alarm_clock_time:
+     name: Alarm Time
+     has_date: false
+     has_time: true
+     initial: '07:25'
+
+input_number: 
+    alarm_hour:
+      name: Alarm Hour
+      icon: mdi:timer
+      initial: 8
+      min: 0
+      max: 23
+      step: 1
+    alarm_minutes:
+      name: Alarm Minutes
+      icon: mdi:timer
+      initial: 0
+      min: 0
+      max: 55
+      step: 5
+    prepare_ready_time:
+      name: Ready Time Minutes
+      icon: mdi:timer
+      initial: 10
+      min: 0
+      max: 55
+      step: 1      
+    buffer_time:
+      name: Buffer Time Minutes
+      icon: mdi:timer
+      initial: 6
+      min: 0
+      max: 55
+      step: 1   
+
+
+    wakeup_duration:
+      name: Fade In duration
+      icon: mdi:clock-in
+      initial: 20
+      min: 5
+      max: 60
+      step: 5
+    wakeup_max_brightness:
+      name: Maximmum brightness
+      icon: mdi:white-balance-sunny
+      initial: 255
+      min: 15
+      max: 255
+      step: 17
+    wakeup_max_volume:
+      name: Maximmum Volume
+      icon: mdi:white-balance-sunny
+      initial: 7
+      min: 1
+      max: 10
+      step: 1
+
+
+
+    test_volume:
+      name: Volume for Testing
+      initial: 0
+      min: 0
+      max: 1
+      step: 0.01
+
+    test_brightness:
+      name: Brightness for Testing
+      initial: 0
+      min: 0
+      max: 255
+      step: 1
+
+input_select:
+    radio_wakeup:
+      name: Wakeup Radio Station
+      options:
+        - Radio FM1
+      initial: Radio FM1
+      icon: mdi:radio         
+
+
+
+group:
+  dach_schlaf_alarm:
+    name: Wake-Up Alarm Schlafzimmer
+    entities:
+    - sensor.time
+    - input_boolean.alarm_clock
+    - input_boolean.work_selector
+    - input_boolean.only_week_days
+    - input_number.alarm_hour
+    - input_number.alarm_minutes
+    - input_number.prepare_ready_time
+    - input_number.buffer_time
+    - input_number.wakeup_duration
+    - input_number.wakeup_max_brightness
+    - input_number.wakeup_max_volume
+    - input_number.test_volume
+    - input_number.test_brightness
+    - input_datetime.schlaf_alarm_clock_time
+    - sensor.alarmtime
+    - sensor.time_until_alarm
+    - sensor.time_of_next_alarm
+    - sensor.time_to_leave
+    - sensor.nextalarm
+    - sensor.marcel_to_work
+    - input_select.radio_wakeup
+    - sensor.wakeup_start_time_fadein
+    - sensor.wakeup_fadein_duration
+    - sensor.wakeup_vol_increase_count
+    - sensor.wakeup_light_increase_count
+
+sensor:
+    - platform: template
+      sensors:
+        alarmtime:
+          friendly_name: Target Ready Time
+          entity_id:
+           - input_number.alarm_hour
+           - input_number.alarm_minutes
+          value_template: '{{ "%0.02d:%0.02d" | format(states("input_number.alarm_hour") | int, states("input_number.alarm_minutes") | int) }}'
+  
+        nextalarm:
+          friendly_name: Minutes until next alarm
+          entity_id:
+           - input_number.alarm_hour
+           - input_number.alarm_minutes
+           - input_number.prepare_ready_time
+           - input_number.buffer_time
+           - sensor.marcel_to_work
+          value_template: >
+            {% set relative_time =  (states.input_number.alarm_hour.state|float|multiply(60) + states.input_number.alarm_minutes.state|float) - ( now().hour|float|multiply(60) + now().minute ) - states.input_number.prepare_ready_time.state|float - states.sensor.marcel_to_work.state|float - states.input_number.buffer_time.state|float %}
+            {%- if relative_time < 0 -%}
+                    {{23*60+relative_time}}
+            {%- else -%}
+                    {{ relative_time-60 }}
+            {%- endif %}
+  
+        time_until_alarm:
+          friendly_name: Time until next alarm
+          entity_id:
+           - sensor.nextalarm
+          value_template: '{{  (states.sensor.nextalarm.state.split(" ")[0] | int *60 ) | timestamp_custom("%H:%M") }}'
+
+        time_of_next_alarm:
+          friendly_name: Time of next alarm
+          entity_id:
+           - sensor.nextalarm
+          value_template: >
+            {% set next_time =  (states.sensor.nextalarm.state.split(" ")[0] | int *60 ) + (( now().hour|float|multiply(60) + now().minute ) | int *60 ) %}
+            {{  next_time | timestamp_custom("%H:%M") }}
+
+        time_to_leave:
+          friendly_name: Time to Leave
+          entity_id:
+           - sensor.nextalarm
+           - input_number.prepare_ready_time
+          value_template: >
+            {% set next_time =  (states.sensor.nextalarm.state.split(" ")[0] | int *60 ) + (( now().hour|float|multiply(60) + now().minute ) | int *60 ) + (states.input_number.prepare_ready_time.state|float| int *60) %}
+            {{  next_time | timestamp_custom("%H:%M") }}
+
+
+        wakeup_start_time_fadein:
+          friendly_name: Fade-in start time
+          entity_id:
+           - sensor.nextalarm
+           - input_number.wakeup_duration
+          value_template: >
+            {% set next_time =  (states.sensor.nextalarm.state.split(" ")[0] | int *60 ) + (( now().hour|float|multiply(60) + now().minute ) | int *60 ) - (states.input_number.wakeup_duration.state|float| int *60) %}
+            {{  next_time | timestamp_custom("%H:%M") }}
+
+
+
+
+        #wakeup_alarm_time:
+        #  friendly_name: 'Alarm time'
+        #  value_template: '{% if states.input_number.wakeup_hour.state|length == 3 %}0{% endif %}{{ states.input_number.wakeup_hour.state | int }}:{% if states.input_number.wakeup_minutes.state|length == 3 %}0{% endif %}{{ states.input_number.wakeup_minutes.state | int }}'
+#
+
+        wakeup_fadein_duration:
+          friendly_name: 'Fade-in duration'
+          value_template: '{{ states.input_number.wakeup_duration.state | int }}'
+          unit_of_measurement: 'min'
+
+
+        # wakeup_start_time_fadein:
+        #   friendly_name: 'Fade-in start time'
+        #   value_template: >
+        #     {% if states.sensor.time_of_next_alarm and states.input_number.wakeup_duration %}
+        #     {% set alarmtime = states.sensor.time_of_next_alarm.state %}
+        #     {% set alarm_hour = alarmtime.split(":")[0] | int %}
+        #     {% set alarm_min = alarmtime.split(":")[1] | int %}
+        #     {% set light_dur = states.input_number.wakeup_duration.state | int %}
+        #     {% set alarm_min_light = alarm_min - light_dur %}
+        #     {% if alarm_min_light  < 0 %}
+        #     {% set alarm_min_light = alarm_min_light + 60 %}
+        #     {% set alarm_hour_light = alarm_hour - 1 %}
+        #     {% if alarm_hour_light < 0 %}{% set alarm_hour_light = 23 %}{% endif %}
+        #     {% if alarm_hour_light < 10 %}0{% endif %}{{ alarm_hour_light}}:{% if alarm_min_light < 10 %}0{% endif %}{{ alarm_min_light }}
+        #     {% else %}
+        #     {% if alarm_hour < 10 %}0{% endif %}{{ alarm_hour }}:{% if alarm_min_light < 10 %}0{% endif %}{{ alarm_min_light }}
+        #     {% endif %}
+        #     {% endif %}
+
+
+#      wakeup_light_current_brightness:
+#        friendly_name: 'Light brightness'
+#        value_template: >
+#          {% if is_state('input_select.wakeup_light_id', 'light.light1') %}
+#            {{states.light.light1.attributes.brightness | int}}
+#          {% elif is_state('input_select.wakeup_light_id', 'light.light2') %}
+#            {{states.light.light2.attributes.brightness | int}}
+#          {% elif is_state('input_select.wakeup_light_id', 'light.light3') %}
+#            {{states.light.light3.attributes.brightness | int}}
+#  #add the other lights
+#          {% else %}
+#            0
+#          {% endif %}
+
+   #    wakeup_light_current_brightness:
+   #      friendly_name: 'Light brightness'
+   #      value_template: >
+   #        {{states.light.dach_schlaf_licht_level.attributes.brightness | int}}
+
+
+
+     #  wakeup_adjusted_transition:
+     #    friendly_name: 'Adjusted transition'
+     #    value_template: >
+     #      {% if states.sensor.wakeup_light_current_brightness.state|int < ((((states.input_number.wakeup_max_brightness.state|int/(states.input_number.wakeup_max_brightness.state|int*states.input_number.transition.state|int/(states.input_number.wakeup_duration.state|int*60))|round)|round)*(states.input_number.transition.state | int + 1)) -states.input_number.wakeup_duration.state|int*60)*(((states.input_number.wakeup_max_brightness.state|int)*(states.input_number.transition.state | int))/(states.input_number.wakeup_duration.state | int * 60))|round %}
+     #        {{states.input_number.transition.state|int-([states.input_number.transition.state|int-(states.input_number.wakeup_duration.state|int*60/(states.input_number.wakeup_max_brightness.state|int/((states.input_number.wakeup_max_brightness.state|int*states.input_number.transition.state|int/states.input_number.transition.state|int)|round)|round)|round),0]|max)}}
+     #      {% else %}
+     #        {{states.input_number.transition.state|int-([states.input_number.transition.state|int-(states.input_number.wakeup_duration.state|int*60/(states.input_number.wakeup_max_brightness.state|int/((states.input_number.wakeup_max_brightness.state|int*states.input_number.transition.state|int/states.input_number.transition.state|int)|round)|round)|round),0]|max) + 1}}
+     #      {% endif %}
+
+
+        wakeup_vol_increase_count:
+          friendly_name: "Volume Increase Steps Time"
+          value_template: >
+            {{ ( (    (states.input_number.wakeup_duration.state | int * 60)  /  (states.input_number.wakeup_max_volume.state | int * 10 )    ) | round )   }}
+
+        wakeup_light_increase_count:
+          friendly_name: "Light Increase Steps Time"
+          value_template: >
+            {{ ( (    (states.input_number.wakeup_duration.state | int * 60)  /  (states.input_number.wakeup_max_brightness.state | int )    ) | round )   }}
+
+
+            
+    - platform: time_date
+      display_options:
+          - 'time'
+          - 'date'
+          - 'date_time'
+          - 'time_date'
+          - 'time_utc'
+          - 'beat'
+
+
+   
+  
+
+
+
+    #trigger:
+    #  platform: template
+    #  value_template: "{{ states('sensor.time') == (((state_attr('input_datetime.bedroom_alarm_clock_time' , 'timestamp')) - (15 * 60))|timestamp_custom('%H:%M', false)) }}"
+    #  value_template: '{{ states.sensor.time.state == states.sensor.wakeup_start_time_fadein.state }}'
+
+automation:
+  - alias: 'Schlafzimmer Wakeup'
+    trigger:
+      platform: template
+      #value_template: '{{ states.sensor.time.state == states.sensor.time_of_next_alarm.state }}'
+      value_template: '{{ states.sensor.time.state == states.sensor.wakeup_start_time_fadein.state }}'
+    condition:
+      condition: and
+      conditions:
+        - condition: state
+          entity_id: input_boolean.alarm_clock
+          state: 'on'
+        - condition: or
+          conditions:
+            - condition: state
+              entity_id: input_boolean.only_week_days
+              state: 'off'
+            - condition: time
+              weekday:
+                - mon
+                - tue
+                - wed
+                - thu
+                - fri
+    action:
+      - service: script.wakeup_room
+#    action:
+#      - service: homeassistant.turn_off
+#        entity_id: 
+#          - switch.werkstatt_pult_licht_switch
+
+
+##media_player.leona_speaker	
+# action:
+#   - service: media_player.volume_set
+#     data:
+#       entity_id: media_player.badzimmer_home
+#       volume_level: '0.3'
+#
+#   - service: media_player.play_media
+#     data_template:
+#       entity_id: media_player.badzimmer_home
+#       media_content_id: >
+#         {% if is_state("input_select.radio_station_schlafbad", "Radio FM1") %} http://radiofm1.ice.infomaniak.ch/radiofm1-128.mp3
+#         {% elif is_state("input_select.radio_station_schlafbad", "DI.fm Vocal Trance") %} http://prem2.di.fm:80/vocaltrance?e5610542b1780e1
+#         {% elif is_state("input_select.radio_station_schlafbad", "Sky.fm Rock") %} http://prem2.radiotunes.com:80/hardrock_hi?e5610542b1780e1
+#         {% endif %}
+#       media_content_type: 'music'
+
+
+  # - alias: Bedroom Home - Volume Control
+  #   trigger:
+  #     platform: state
+  #     entity_id: input_number.test_volume
+  #   action:
+  #     - service: media_player.volume_set
+  #       data_template:
+  #         entity_id: media_player.leona_speaker
+  #         volume_level: '{{ states.input_number.test_volume.state|float }}'
+# 
+# 
+  # - alias: Bedroom Home - Light Control
+  #   trigger:
+  #     platform: state
+  #     entity_id: input_number.test_brightness
+  #   action:
+  #     - service: light.turn_on
+  #       data_template:
+  #         entity_id: light.dach_schlaf_licht_level
+  #         brightness: "{{ states.input_number.test_brightness.state|int }}"
+
+
+
+
+
+
+script:
+
+
+#  wakeup_room_initial:
+#    alias: 'Wakeup initial'
+#    sequence:
+#      - service: light.turn_on
+#        data_template:
+#          entity_id: '{{ states.input_select.wakeup_light_id.state}}'
+#          brightness: 0
+#          rgb_color: [1,1,1]
+
+  wakeup_room_sound_turnon:
+    alias: 'Wakeup Sound turnon'
+    sequence:
+      
+      - service: script.turn_off
+        entity_id: script.wakeup_room_sound_iterate
+      
+      - service: input_number.set_value
+        data_template:
+          entity_id: input_number.test_volume
+          value: "{{ states.input_number.test_volume.state|float + 0.01|float }}"
+
+      - service: media_player.volume_set
+        data_template:
+          entity_id: media_player.schlafzimmer_home
+          volume_level: '{{ states.input_number.test_volume.state|float }}'
+
+      - delay: '00:00:{{states.sensor.wakeup_vol_increase_count.state|int}}'
+      
+      - service: script.turn_on
+        entity_id: script.wakeup_room_sound_iterate
+
+
+  wakeup_room_sound_iterate:
+    alias: 'Wakeup sound iterate'
+    sequence:
+      - service: script.turn_off
+        entity_id: script.wakeup_room_sound_turnon
+      - service_template: >
+          {% if states.input_number.test_volume.state|int < states.input_number.wakeup_max_volume.state|int %}
+            script.turn_on
+          {% else %}
+            script.turn_off
+          {% endif %}
+        data:
+          entity_id: script.wakeup_room_sound_turnon
+
+
+
+
+
+
+
+  wakeup_room_light_turnon:
+    alias: 'Wakeup Light turnon'
+    sequence:
+
+      - service: script.turn_off
+        entity_id: script.wakeup_room_light_iterate
+      
+      - service: input_number.set_value
+        data_template:
+          entity_id: input_number.test_brightness
+          value: "{{ states.input_number.test_brightness.state|int + 1 }}"
+
+      - service: light.turn_on
+        data_template:
+          entity_id: light.dach_schlaf_licht_level
+          brightness: "{{ states.input_number.test_brightness.state|int }}"
+
+      - delay: '00:00:{{states.sensor.wakeup_light_increase_count.state|int}}'
+      
+      - service: script.turn_on
+        entity_id: script.wakeup_room_light_iterate
+
+
+
+  wakeup_room_light_iterate:
+    alias: 'Wakeup light iterate'
+    sequence:
+      - service: script.turn_off
+        entity_id: script.wakeup_room_light_turnon
+      - service_template: >
+          {% if states.input_number.test_brightness.state|int < states.input_number.wakeup_max_brightness.state|int %}
+            script.turn_on
+          {% else %}
+            script.turn_off
+          {% endif %}
+        data:
+          entity_id: script.wakeup_room_light_turnon
+
+
+
+
+  wakeup_room:
+    alias: 'Wakeup'
+    sequence:
+      - service: input_number.set_value
+        data_template:
+          entity_id: input_number.test_volume
+          value: 0
+
+      - service: input_number.set_value
+        data_template:
+          entity_id: input_number.test_brightness
+          value: 0
+
+      - service: media_player.volume_set
+        data_template:
+          entity_id: media_player.schlafzimmer_home
+          volume_level: '{{ states.input_number.test_volume.state|float }}'
+
+      - service: media_player.play_media
+        data_template:
+          entity_id: media_player.schlafzimmer_home
+          media_content_id: >
+            {% if is_state("input_select.radio_wakeup", "Radio FM1") %} http://radiofm1.ice.infomaniak.ch/radiofm1-128.mp3
+            {% elif is_state("input_select.radio_wakeup", "DI.fm Vocal Trance") %} http://prem2.di.fm:80/vocaltrance?e5610542b1780e1
+            {% elif is_state("input_select.radio_wakeup", "Sky.fm Rock") %} http://prem2.radiotunes.com:80/hardrock_hi?e5610542b1780e1
+            {% endif %}
+          media_content_type: 'music'
+
+      - service: script.turn_on
+        entity_id: script.wakeup_room_sound_turnon
+
+      - service: script.turn_on
+        entity_id: script.wakeup_room_light_turnon
+
+########################################################################################################################################################################
+#  #1. Automation
+#  - alias: 'Wakeup Light'
+#    trigger:
+#      platform: template
+#      value_template: '{{ states.sensor.time.state == states.sensor.wakeup_start_time_fadein.state }}'
+#    condition:
+#      condition: and
+#      conditions:
+#        - condition: state
+#          entity_id: input_boolean.wakeup
+#          state: 'on'
+#        - condition: or
+#          conditions:
+#            - condition: state
+#              entity_id: input_boolean.wakeup_weekends
+#              state: 'on'
+#            - condition: time
+#              weekday:
+#                - mon
+#                - tue
+#                - wed
+#                - thu
+#                - fri
+#    action:
+#      - service: script.wakeup_room
+#  
+#  #2. Sensors
+#  - platform: template
+#    sensors:
+#      wakeup_alarm_time:
+#        friendly_name: 'Alarm time'
+#        value_template: '{% if states.input_number.wakeup_hour.state|length == 3 %}0{% endif %}{{ states.input_number.wakeup_hour.state | int }}:{% if states.input_number.wakeup_minutes.state|length == 3 %}0{% endif %}{{ states.input_number.wakeup_minutes.state | int }}'
+#  - platform: template
+#    sensors:
+#      wakeup_fadein_duration:
+#        friendly_name: 'Fade-in duration'
+#        value_template: '{{ states.input_number.wakeup_duration.state | int }}'
+#        unit_of_measurement: 'min'
+#  - platform: template
+#    sensors:
+#      wakeup_start_time_fadein:
+#        friendly_name: 'Fade-in start time'
+#        value_template: >
+#          {% if states.sensor.wakeup_alarm_time and states.input_number.wakeup_duration %}
+#          {% set alarmtime = states.sensor.wakeup_alarm_time.state %}
+#          {% set alarm_hour = alarmtime.split(":")[0] | int %}
+#          {% set alarm_min = alarmtime.split(":")[1] | int %}
+#          {% set light_dur = states.input_number.wakeup_duration.state | int %}
+#          {% set alarm_min_light = alarm_min - light_dur %}
+#          {% if alarm_min_light  < 0 %}
+#          {% set alarm_min_light = alarm_min_light + 60 %}
+#          {% set alarm_hour_light = alarm_hour - 1 %}
+#          {% if alarm_hour_light < 0 %}{% set alarm_hour_light = 23 %}{% endif %}
+#          {% if alarm_hour_light < 10 %}0{% endif %}{{ alarm_hour_light}}:{% if alarm_min_light < 10 %}0{% endif %}{{ alarm_min_light }}
+#          {% else %}
+#          {% if alarm_hour < 10 %}0{% endif %}{{ alarm_hour }}:{% if alarm_min_light < 10 %}0{% endif %}{{ alarm_min_light }}
+#          {% endif %}
+#          {% endif %}
+#  #replace with own light ids
+#  - platform: template
+#    sensors:
+#      wakeup_light_current_brightness:
+#        friendly_name: 'Light brightness'
+#        value_template: >
+#          {% if is_state('input_select.wakeup_light_id', 'light.light1') %}
+#            {{states.light.light1.attributes.brightness | int}}
+#          {% elif is_state('input_select.wakeup_light_id', 'light.light2') %}
+#            {{states.light.light2.attributes.brightness | int}}
+#          {% elif is_state('input_select.wakeup_light_id', 'light.light3') %}
+#            {{states.light.light3.attributes.brightness | int}}
+#  #add the other lights
+#          {% else %}
+#            0
+#          {% endif %}
+#  - platform: template
+#    sensors:
+#      wakeup_adjusted_transition:
+#        friendly_name: 'Adjusted transition'
+#        value_template: >
+#          {% if states.sensor.wakeup_light_current_brightness.state|int < ((((states.input_number.wakeup_max_brightness.state|int/(states.input_number.wakeup_max_brightness.state|int*states.input_number.transition.state|int/(states.input_number.wakeup_duration.state|int*60))|round)|round)*(states.input_number.transition.state | int + 1)) -states.input_number.wakeup_duration.state|int*60)*(((states.input_number.wakeup_max_brightness.state|int)*(states.input_number.transition.state | int))/(states.input_number.wakeup_duration.state | int * 60))|round %}
+#            {{states.input_number.transition.state|int-([states.input_number.transition.state|int-(states.input_number.wakeup_duration.state|int*60/(states.input_number.wakeup_max_brightness.state|int/((states.input_number.wakeup_max_brightness.state|int*states.input_number.transition.state|int/states.input_number.transition.state|int)|round)|round)|round),0]|max)}}
+#          {% else %}
+#            {{states.input_number.transition.state|int-([states.input_number.transition.state|int-(states.input_number.wakeup_duration.state|int*60/(states.input_number.wakeup_max_brightness.state|int/((states.input_number.wakeup_max_brightness.state|int*states.input_number.transition.state|int/states.input_number.transition.state|int)|round)|round)|round),0]|max) + 1}}
+#          {% endif %}
+#  
+#  #3. input boolean
+#  wakeup:
+#    name: 'Enable wakeup light'
+#    icon: mdi:power
+#    initial: off
+#  wakeup_weekends:
+#    name: 'Wakeup weekends'
+#    icon: mdi:power
+#    initial: off
+#  
+#  #4. input number
+#  wakeup_hour:
+#    name: Hour
+#    icon: mdi:clock-in
+#    initial: 7
+#    min: 0
+#    max: 23
+#    step: 1
+#  wakeup_minutes:
+#    name: Minutes
+#    icon: mdi:clock-in
+#    initial: 30
+#    min: 0
+#    max: 55
+#    step: 5
+#  wakeup_duration:
+#    name: Light fade-in duration
+#    icon: mdi:clock-in
+#    initial: 20
+#    min: 5
+#    max: 60
+#    step: 5
+#  wakeup_max_brightness:
+#    name: Maximmum brightness
+#    icon: mdi:white-balance-sunny
+#    initial: 225
+#    min: 15
+#    max: 255
+#    step: 17
+#  transition:
+#    name: Transition in seconds
+#    icon: mdi:clock-in
+#    initial: 10
+#    min: 1
+#    max: 60
+#    step: 1
+#  
+#  #5. input select
+#    wakeup_light_id:
+#      name: Light id
+#      options:
+#       - light.all_lights
+#       - light.light1
+#       - light.light2
+#       - light.light3
+#  #add the other lights
+#      initial: light.light1
+#      icon: mdi:weather-sunset-up
+#  
+#  #6. scripts
+#  wakeup_room_initial:
+#    alias: 'Wakeup initial'
+#    sequence:
+#      - service: light.turn_on
+#        data_template:
+#          entity_id: '{{ states.input_select.wakeup_light_id.state}}'
+#          brightness: 0
+#          rgb_color: [1,1,1]
+#  wakeup_room_turnon:
+#    alias: 'Wakeup turnon'
+#    sequence:
+#      - service: script.turn_off
+#        entity_id: script.wakeup_room_iterate
+#      - service: light.turn_on
+#        data_template:
+#          entity_id: '{{ states.input_select.wakeup_light_id.state}}'
+#          brightness: '{{ states.sensor.wakeup_light_current_brightness.state|int + (((states.input_number.wakeup_max_brightness.state|int)*(states.input_number.transition.state | int))/(states.input_number.wakeup_duration.state | int * 60))|round }}'
+#          rgb_color: [1,1,1]
+#      - delay: '00:00:{{states.sensor.wakeup_adjusted_transition.state|int}}'
+#      - service: script.turn_on
+#        entity_id: script.wakeup_room_iterate
+#  wakeup_room_iterate:
+#    alias: 'Wakeup iterate'
+#    sequence:
+#      - service: script.turn_off
+#        entity_id: script.wakeup_room_turnon
+#      - service_template: >
+#          {% if states.sensor.wakeup_light_current_brightness.state|int < states.input_number.wakeup_max_brightness.state|int %}
+#            script.turn_on
+#          {% else %}
+#            script.turn_off
+#          {% endif %}
+#        data:
+#          entity_id: script.wakeup_room_turnon
+#  wakeup_room:
+#    alias: 'Wakeup'
+#    sequence:
+#      - service: script.turn_on
+#        entity_id: script.wakeup_room_initial
+#      - delay: '00:00:{{states.input_number.transition.state|int-([states.input_number.transition.state|int-(states.input_number.wakeup_duration.state|int*60/(states.input_number.wakeup_max_brightness.state|int/((states.input_number.wakeup_max_brightness.state|int*states.input_number.transition.state|int/states.input_number.transition.state|int)|round)|round)|round),0]|max)}}'
+#      - service: script.turn_on
+#        entity_id: script.wakeup_room_turnon
+#  
+#  
+###############################################################################################################################################################
+
+#  Sensors:
+#  
+#    - platform: template
+#      sensors:
+#        alarmtime:
+#          friendly_name: Wakeup Time
+#          entity_id:
+#           - input_slider.alarm_hour
+#           - input_slider.alarm_minutes
+#          value_template: '{{ "%0.02d:%0.02d" | format(states("input_slider.alarm_hour") | int, states("input_slider.alarm_minutes") | int) }}'
+#  
+#        nextalarm:
+#          friendly_name: Seconds untill next alarm
+#          entity_id:
+#           - input_slider.alarm_hour
+#           - input_slider.alarm_minutes
+#          value_template: >
+#            {% set relative_time =  (states.input_slider.alarm_hour.state|float|multiply(60) + states.input_slider.alarm_minutes.state|float) - (now().hour|float|multiply(60) + now().minute) %}
+#            {%- if relative_time < 0 -%}
+#                     {{23*60+relative_time}}
+#            {%- else -%}
+#                     {{ relative_time-60}}
+#            {%- endif %}
+#  
+#        time_until_alarm:
+#          friendly_name: Time untill next alarm
+#          entity_id:
+#           - sensor.nextalarm
+#          value_template: '{{  (states.sensor.nextalarm.state.split(" ")[0] | int *60 ) | timestamp_custom("%H:%M") }}'
+#  
+#  
+#  Automation for wakeup light with radio:
+#  
+#  - alias: 'Wakeup Light with Radio'
+#    trigger:
+#      platform: time
+#      minutes: '/5'
+#      seconds: '0'
+#    condition:
+#      condition: and
+#      conditions:
+#        - condition: template
+#          value_template: '{{ ((now().strftime("%s") | int + 1200) | timestamp_custom("%H:%M")) == states.sensor.alarmtime.state  }}'
+#        - condition: state
+#          entity_id: input_boolean.alarm_clock
+#          state: 'on'
+#    action:
+#      - service: light.turn_on
+#        data:
+#          entity_id: light.bed_room
+#          brightness: 255
+#          rgb_color: [255,255,255]
+#          transition: 1200   
+#      - service: media_player.play_media
+#        data_template:
+#          entity_id: media_player.bed_room
+#          media_content_id: >
+#              {% if is_state("input_select.radio_wakeup", "Radio 538") %} http://vip-icecast.538.lw.triple-it.nl:80/RADIO538_MP3
+#              {% elif is_state("input_select.radio_wakeup", "Q-Music") %} http://icecast-qmusic.cdp.triple-it.nl/Qmusic_nl_live_96.mp3
+#              {% elif is_state("input_select.radio_wakeup", "3FM") %} http://icecast.omroep.nl/3fm-bb-mp3
+#              {% elif is_state("input_select.radio_wakeup", "100% NL") %} http://stream.100p.nl/100pctnl.mp3
+#              {% elif is_state("input_select.radio_wakeup", "Veronica") %} http://8543.live.streamtheworld.com/VERONICACMP3
+#              {% elif is_state("input_select.radio_wakeup", "Sky Radio") %} http://8623.live.streamtheworld.com:80/SKYRADIOAAC_SC
+#              {% elif is_state("input_select.radio_wakeup", "Arrow Classic Rock") %} http://91.221.151.155/listen.mp3
+#              {% elif is_state("input_select.radio_wakeup", "Classic FM") %} http://19143.live.streamtheworld.com/CLASSICFM_SC
+#              {% elif is_state("input_select.radio_wakeup", "BNR Nieuwsradio") %} http://icecast-bnr.cdp.triple-it.nl/bnr_mp3_96_03
+#              {% endif %}
+#          media_content_type: 'audio/mp4' 
+#      - service: media_player.volume_set
+#        data:
+#          entity_id: media_player.bed_room
+#          volume_level: '0.01'
+#      - delay: '00:02:00'
+#      - service: media_player.volume_set
+#        data:
+#          entity_id: media_player.bed_room
+#          volume_level: '0.05'
+#      - delay: '00:02:00'
+#      - service: media_player.volume_set
+#        data:
+#          entity_id: media_player.bed_room
+#          volume_level: '0.10'
+#      - delay: '00:01:30'
+#      - service: media_player.volume_set
+#        data:
+#          entity_id: media_player.bed_room
+#          volume_level: '0.15'
+#      - delay: '00:01:30'
+#      - service: media_player.volume_set
+#        data:
+#          entity_id: media_player.bed_room
+#          volume_level: '0.20'
+#      - delay: '00:01:30' 
+#      - service: media_player.volume_set
+#        data:
+#          entity_id: media_player.bed_room
+#          volume_level: '0.25'
+#      - delay: '00:01:00'
+#      - service: media_player.volume_set
+#        data:
+#          entity_id: media_player.bed_room
+#          volume_level: '0.30'
+#      - delay: '00:01:00'
+#      - service: media_player.volume_set
+#        data:
+#          entity_id: media_player.bed_room
+#          volume_level: '0.35'
+#      - delay: '00:01:00'     
+#      - service: media_player.volume_set
+#        data:
+#          entity_id: media_player.bed_room
+#          volume_level: '0.40'
+#      - delay: '00:01:00' 
+#      - service: media_player.volume_set
+#        data:
+#          entity_id: media_player.bed_room
+#          volume_level: '0.45'
+#      - delay: '00:01:00'
+#      - service: media_player.volume_set
+#        data:
+#          entity_id: media_player.bed_room
+#          volume_level: '0.50'
+#      - delay: '00:01:00'
+#      - service: media_player.volume_set
+#        data:
+#          entity_id: media_player.bed_room
+#          volume_level: '0.55'
+#      - delay: '00:00:45'
+#      - service: media_player.volume_set
+#        data:
+#          entity_id: media_player.bed_room
+#          volume_level: '0.60'
+#      - delay: '00:00:45'
+#      - service: media_player.volume_set
+#        data:
+#          entity_id: media_player.bed_room
+#          volume_level: '0.65'
+#      - delay: '00:00:45'
+#      - service: media_player.volume_set
+#        data:
+#          entity_id: media_player.bed_room
+#          volume_level: '0.70'
+#      - delay: '00:02:00'   
+#      - service: light.turn_on
+#        data:
+#          entity_id: light.hall_way
+#          brightness: 125
+#      - service: light.turn_on
+#        data:
+#          entity_id: light.diner_table
+#          brightness: 125
+#      - service: light.turn_on
+#        data:
+#          entity_id: light.living_room
+#          brightness: 140
+#      - service: media_player.volume_set
+#        data:
+#          entity_id: media_player.ca_bathroom
+#          volume_level: '0.40'
+#      - delay: '00:00:10'
+#      - service: media_player.volume_set
+#        data:
+#          entity_id: media_player.ca_bathroom
+#          volume_level: '0.40'
+#      - service: media_player.play_media
+#        data_template:
+#          entity_id: media_player.ca_bathroom
+#          media_content_id: >
+#              {% if is_state("input_select.radio_wakeup", "Radio 538") %} http://vip-icecast.538.lw.triple-it.nl:80/RADIO538_MP3
+#              {% elif is_state("input_select.radio_wakeup", "Q-Music") %} http://icecast-qmusic.cdp.triple-it.nl/Qmusic_nl_live_96.mp3
+#              {% elif is_state("input_select.radio_wakeup", "3FM") %} http://icecast.omroep.nl/3fm-bb-mp3
+#              {% elif is_state("input_select.radio_wakeup", "100% NL") %} http://stream.100p.nl/100pctnl.mp3
+#              {% elif is_state("input_select.radio_wakeup", "Veronica") %} http://8543.live.streamtheworld.com/VERONICACMP3
+#              {% elif is_state("input_select.radio_wakeup", "Sky Radio") %} http://8623.live.streamtheworld.com:80/SKYRADIOAAC_SC
+#              {% elif is_state("input_select.radio_wakeup", "Arrow Classic Rock") %} http://91.221.151.155/listen.mp3
+#              {% elif is_state("input_select.radio_wakeup", "Classic FM") %} http://19143.live.streamtheworld.com/CLASSICFM_SC
+#              {% elif is_state("input_select.radio_wakeup", "BNR Nieuwsradio") %} http://icecast-bnr.cdp.triple-it.nl/bnr_mp3_96_03
+#              {% endif %}
+#          media_content_type: 'audio/mp4' 
+#      - service: homeassistant.turn_off
+#        data:
+#          entity_id: input_boolean.alarm_clock
+#          
+#  Automations for changing alarm time triggered through MQTT, sent through Tasker:
+#  
+#  - alias: Set alarmtime_hour
+#    trigger:
+#      platform: mqtt
+#      topic: "setHour"
+#    action:
+#       service: input_slider.select_value
+#       data_template:
+#        entity_id: input_slider.alarm_hour
+#        value: '{{ trigger.payload}}'
+#        
+#  - alias: Set alarmtime_minutes
+#    trigger:
+#      platform: mqtt
+#      topic: "setMinutes"
+#    action:
+#       service: input_slider.select_value
+#       data_template:
+#        entity_id: input_slider.alarm_minutes
+#        value: '{{ trigger.payload}}'
+#  Script for executing lullaby and gently decreasing volume over 30 mins:
+#  
+#    sleep:
+#      alias: Good Night
+#      sequence:
+#        - alias: Set Volume
+#          service: media_player.volume_set
+#          data:
+#            entity_id: media_player.bed_room
+#            volume_level: '1.0'
+#        - alias: Say Sleep Left   
+#          service: tts.google_say
+#          entity_id: media_player.bed_room
+#          data_template:
+#            message: 'Next alarm in  {{  (states.sensor.nextalarm.state.split(" ")[0] | int *60 ) | timestamp_custom("%H") | int }} hours and {{  (states.sensor.nextalarm.state.split(" ")[0] | int *60 ) | timestamp_custom("%M")  }} minutes . Good night.'
+#            cache: false 
+#        - delay: '00:00:15' 
+#        - alias: Set Volume2
+#          service: media_player.volume_set
+#          data:
+#            entity_id: media_player.bed_room
+#            volume_level: '0.75'    
+#        - condition: state
+#          entity_id: input_boolean.lullaby
+#          state: 'on'          
+#        - service: media_player.play_media
+#          entity_id: media_player.bed_room
+#          data_template:
+#            entity_id: media_player.bed_room
+#            media_content_id: >
+#             {% if is_state("input_select.lullaby", "Sleep Radio") %} http://37.59.28.208:8722/stream
+#             {% elif is_state("input_select.lullaby", "Ambient Sleeping Pill") %} http://perseus.shoutca.st:8447/h
+#             {% elif is_state("input_select.lullaby", "Radio Art - Sleep") %} http://live.radioart.com/fSleep.mp3
+#             {% elif is_state("input_select.lullaby", "Ambi Nature Radio") %} http://94.23.252.14:8067/stream
+#             {% elif is_state("input_select.lullaby", "Calm Radio - Sleep") %} http://streams.calmradio.com/api/39/128/stream
+#             {% endif %}
+#            media_content_type: 'audio/mp4'  
+#        - delay: '00:05:00'
+#        - service: media_player.volume_set
+#          data:
+#            entity_id: media_player.bed_room
+#            volume_level: '0.70'
+#        - delay: '00:02:30'
+#        - service: media_player.volume_set
+#          data:
+#            entity_id: media_player.bed_room
+#            volume_level: '0.65'
+#        - delay: '00:02:30'
+#        - service: media_player.volume_set
+#          data:
+#            entity_id: media_player.bed_room
+#            volume_level: '0.60'
+#        - delay: '00:05:00'
+#        - service: media_player.volume_set
+#          data:
+#            entity_id: media_player.bed_room
+#            volume_level: '0.55'
+#        - delay: '00:02:30'
+#        - service: media_player.volume_set
+#          data:
+#            entity_id: media_player.bed_room
+#            volume_level: '0.50'
+#        - delay: '00:02:30'
+#        - service: media_player.volume_set
+#          data:
+#            entity_id: media_player.bed_room
+#            volume_level: '0.45'
+#        - delay: '00:05:00'
+#        - service: media_player.volume_set
+#          data:
+#            entity_id: media_player.bed_room
+#            volume_level: '0.40'   
+#        - delay: '00:02:30'
+#        - service: media_player.volume_set
+#          data:
+#            entity_id: media_player.bed_room
+#            volume_level: '0.35'   
+#        - delay: '00:02:30'
+#        - service: media_player.volume_set
+#          data:
+#            entity_id: media_player.bed_room
+#            volume_level: '0.30'   
+#        - delay: '00:05:00'
+#        - service: media_player.volume_set
+#          data:
+#            entity_id: media_player.bed_room
+#            volume_level: '0.25'   
+#  Input sliders, selectors and booleans:
+#  
+#  input_boolean:
+#    alarm_clock:
+#      name: On/Off
+#      initial: off
+#      icon: mdi:alarm
+#    lullaby:
+#      name: Lullaby On/Off
+#      initial: On
+#      icon: mdi:sleep
+#   
+#  input_slider: 
+#    alarm_hour:
+#      name: Hour
+#      icon: mdi:timer
+#      initial: 6
+#      min: 0
+#      max: 23
+#      step: 1
+#    alarm_minutes:
+#      name: Minutes
+#      icon: mdi:timer
+#      initial: 35
+#      min: 0
+#      max: 55
+#      step: 5
+#      
+#  input_select:
+#    radio_wakeup:
+#      name: Wakeup Radio Station
+#      options:
+#        - Radio 538
+#        - Q-Music
+#        - 3FM
+#        - 100% NL
+#        - Veronica
+#        - Sky Radio
+#        - Arrow Classic Rock
+#        - Classic FM
+#        - BNR Nieuwsradio
+#      initial: Radio 538
+#      icon: mdi:radio         
+#    lullaby:
+#      name: Lullaby Radio Station
+#      options:
+#        - Sleep Radio
+#        - Ambient Sleeping Pill
+#        - Radio Art - Sleep
+#        - Ambi Nature Radio
+#        - Calm Radio - Sleep
+#      initial: Ambient Sleeping Pill
+#      icon: mdi:music-circle
+#  Frontend view:
+#  
+#  group:
+#   Wake-up Alarm:
+#    name: Wakeup Light with Radio
+#    entities:
+#    - input_boolean.alarm_clock
+#    - sensor.alarmtime
+#    - sensor.time_until_alarm
+#    - input_slider.alarm_hour
+#    - input_slider.alarm_minutes
+#    - input_boolean.lullaby
+#    - input_select.lullaby
+#    - input_select.radio_wakeup
+
+########################################################################################################################################################################
+
+# group:
+#   Alarm_Clock:
+#     name: Alarm Clock
+#     view: yes
+#     entities:
+#       - input_boolean.alarm_clock_work_day
+#       - input_boolean.alarm_clock_off_day
+#       - sensor.time
+#       - sensor.alarm_time
+#       - input_number.alarm_hour
+#       - input_number.alarm_minutes
+#       - input_boolean.alarm_clock
+#       - input_boolean.start_alarm_clock_work_day
+#       - input_boolean.start_alarm_clock_off_day
+#       - input_boolean.alarm_clock_loop
+#       - input_select.radio_station_schlafzimmer
+#       - automation.wake_up_radio
+#       - automation.start_alarm_clock_radio_work_day
+#       - automation.start_alarm_clock_radio_off_day
+#       - automation.wake_up_radio_from_loop
+#       - script.alarm_clock_loop
+#   
+# 
+# sensor:
+#   - platform: template
+#     sensors:
+#       alarm_time_off_day:
+#         friendly_name: Alarm Time Off Day
+#         value_template: '{{ "%0.02d:%0.02d" | format(states("input_number.alarm_hour") | int, states("input_number.alarm_minutes") | int) }}'
+# 
+#   - platform: template
+#     sensors:
+#       alarm_time_work_day:
+#         friendly_name: Alarm Time Work Day
+#         value_template: '{{ "%0.02d:%0.02d" | format(states("input_number.alarm_hour") | int, states("input_number.alarm_minutes") | int) }}'
+# 
+# 
+# input_boolean:
+#   alarm_clock:
+#     name: Alarm On/Off
+#     icon: mdi:alarm
+#   alarm_clock_loop:
+#     name: Alarm Clock Loop
+#     icon: mdi:alarm
+#   alarm_clock_work_day:
+#     name: Work Alarm On/Off
+#     icon: mdi:alarm
+#   alarm_clock_off_day:
+#     name: Off Day Alarm On/Off
+#     icon: mdi:alarm
+#   start_alarm_clock_work_day:
+#     name: Start Alarm Clock Work Day
+#     initial: off
+#     icon: mdi:alarm
+#   start_alarm_clock_off_day:
+#     name: Start Alarm Clock Off Day
+#     initial: off
+#     icon: mdi:alarm
+#   work_day:
+#     name: Work Day
+#     icon: mdi:briefcase
+#     
+# 
+# input_number:
+#   alarm_hour:
+#     name: Hour
+#     icon: mdi:timer
+#     initial: 6
+#     min: 0
+#     max: 20
+#     step: 1
+#   alarm_minutes:
+#     name: Minutes
+#     icon: mdi:timer
+#     initial: 25
+#     min: 0
+#     max: 55
+#     step: 1
+# 
+# input_select:
+#   radio_station_schlafzimmer:
+#     name: 'Select Radio Station:'
+#     options:
+#       - Radio FM1
+#       - Sky.fm Rock
+#       - DI.fm Vocal Trance
+#     initial: Radio FM1
+#     icon: mdi:radio 
+# 
+# 
+# automation:
+#   - id: start_alarm_clock_radio_off_day
+#     alias: Start Alarm Clock Radio Off Day
+#     initial_state: 'on'
+#     trigger:
+#       platform: template
+#       value_template: '{{ states.sensor.time.state == states.sensor.alarm_time_off_day.state }}'
+#     condition:
+#       - condition: state
+#         entity_id: input_boolean.alarm_clock
+#         state: 'off'
+#       - condition: state
+#         entity_id: input_boolean.start_alarm_clock_off_day
+#         state: 'off'
+#       - condition: state
+#         entity_id: input_boolean.alarm_clock_work_day
+#         state: 'off'
+#       - condition: state
+#         entity_id: input_boolean.alarm_clock_off_day
+#         state: 'on'
+#     action:
+#       - service: input_boolean.turn_on
+#         data:
+#           entity_id: input_boolean.alarm_clock
+#       - service: input_boolean.turn_on
+#         data:
+#           entity_id: input_boolean.start_alarm_clock_off_day
+# 
+# 
+# #
+#   - id: start_alarm_clock_radio_work_day
+#     alias: Start Alarm Clock Radio Work Day
+#     initial_state: 'on'
+#     trigger:
+#       platform: template
+#       value_template: '{{ states.sensor.time.state == states.sensor.alarm_time_work_day.state }}'
+#     condition:
+#       - condition: time
+#         weekday:
+#           - mon
+#           - tue
+#           - wed
+#           - thu
+#           - fri
+#       - condition: state
+#         entity_id: input_boolean.alarm_clock
+#         state: 'off'
+#       - condition: state
+#         entity_id: input_boolean.work_day
+#         state: 'on'
+#       - condition: state
+#         entity_id: input_boolean.start_alarm_clock_work_day
+#         state: 'off'
+#       - condition: state
+#         entity_id: input_boolean.alarm_clock_work_day
+#         state: 'on'
+#       - condition: state
+#         entity_id: input_boolean.alarm_clock_off_day
+#         state: 'off'
+#     action:
+#       - service: input_boolean.turn_on
+#         data:
+#           entity_id: input_boolean.start_alarm_clock_work_day
+#       - service: input_boolean.turn_on
+#         data:
+#           entity_id: input_boolean.alarm_clock
+# 
+# #
+#   - id: wake_up_radio
+#     alias: Wake Up Radio
+#     initial_state: 'on'
+#     trigger:
+#       - platform: state
+#         entity_id: input_boolean.start_alarm_clock_work_day
+#         to: 'on'
+#       - platform: state
+#         entity_id: input_boolean.start_alarm_clock_off_day
+#         to: 'on'
+#     condition:
+#       - condition: state
+#         entity_id: input_boolean.alarm_clock
+#         state: 'on'
+#       - condition: or
+#         conditions:
+#           - condition: state
+#             entity_id: input_boolean.alarm_clock_work_day
+#             state: 'on'
+#           - condition: state
+#             entity_id: input_boolean.alarm_clock_off_day
+#             state: 'on'
+#     action:
+#       - service: input_boolean.turn_off
+#         data:
+#           entity_id: input_boolean.start_alarm_clock_work_day
+#       - service: input_boolean.turn_off
+#         data:
+#           entity_id: input_boolean.start_alarm_clock_off_day
+#       - service: script.turn_on
+#         data:
+#           entity_id: script.alarm_clock_loop
+#             
+# #
+#   - id: wake_up_radio_from_loop
+#     alias: Wake Up Radio From Loop
+#     initial_state: 'on'
+#     trigger:
+#       - platform: state
+#         entity_id: input_boolean.alarm_clock_loop
+#         to: 'on'
+#     condition:
+#       - condition: state
+#         entity_id: input_boolean.alarm_clock
+#         state: 'on'
+#     action:
+#       - delay: '00:00:03'
+#       - service: input_boolean.turn_off
+#         data:
+#           entity_id: input_boolean.alarm_clock_loop
+#       - service: script.turn_on
+#         data:
+#           entity_id: script.alarm_clock_loop
+#             
+# script:
+#   alarm_clock_loop:
+#     alias: Alarm Clock Loop
+#     sequence:
+#       - service: media_player.turn_on
+#         data:
+#           entity_id: media_player.jason_home
+#       - service: media_player.volume_set
+#         data:
+#           entity_id: media_player.jason_home
+#           volume_level: '0.01'
+#       - delay: '00:00:02'
+#       - service: media_player.play_media
+#         data_template:
+#           entity_id: media_player.jason_home
+#           media_content_id: >
+#             {% if is_state("input_select.radio_station_schlafzimmer", "Radio FM1") %} http://radiofm1.ice.infomaniak.ch/radiofm1-128.mp3
+#             {% elif is_state("input_select.radio_station_schlafzimmer", "DI.fm Vocal Trance") %} http://prem2.di.fm:80/vocaltrance?e5610542b1780e1
+#             {% endif %}
+#           media_content_type: 'audio/mp4'
+#       - delay: '00:01:00'
+#       - service: media_player.volume_set
+#         data:
+#           entity_id: media_player.jason_home
+#           volume_level: '0.05'
+#       - delay: '00:01:00'
+#       - service: media_player.volume_set
+#         data:
+#           entity_id: media_player.jason_home
+#           volume_level: '0.10'
+#       - delay: '00:01:00'
+#       - service: media_player.volume_set
+#         data:
+#           entity_id: media_player.jason_home
+#           volume_level: '0.15'
+#       - delay: '00:01:00'
+#       - service: media_player.volume_set
+#         data:
+#           entity_id: media_player.jason_home
+#           volume_level: '0.20'
+#       - delay: '00:01:00'
+#       - service: media_player.volume_set
+#         data:
+#           entity_id: media_player.jason_home
+#           volume_level: '0.25'
+#       - delay: '00:01:00'
+#       - service: media_player.volume_set
+#         data:
+#           entity_id: media_player.jason_home
+#           volume_level: '0.30'
+#       - delay: '00:01:00'
+#       - service: media_player.volume_set
+#         data:
+#           entity_id: media_player.jason_home
+#           volume_level: '0.35'
+#       - delay: '00:01:00'
+#       - service: media_player.volume_set
+#         data:
+#           entity_id: media_player.jason_home
+#           volume_level: '0.40'
+#       - delay: '00:01:00'
+#       - service: media_player.volume_set
+#         data:
+#           entity_id: media_player.jason_home
+#           volume_level: '0.45'
+#       - delay: '00:01:00'
+#       - service: media_player.volume_set
+#         data:
+#           entity_id: media_player.jason_home
+#           volume_level: '0.50'
+#       - service: input_boolean.turn_on
+#         data:
+#           entity_id: input_boolean.alarm_clock_loop

@@ -1,0 +1,220 @@
+title: My Home
+# Include external resources
+resources:
+  - url: /local/my-custom-card.js
+    type: js
+  - url: /local/my-webfont.css
+    type: css
+
+# Optional background for all views. Check https://developer.mozilla.org/en-US/docs/Web/CSS/background for more examples.
+background: center / cover no-repeat url("/background.png") fixed
+# Exclude entities from "Unused entities" view
+excluded_entities:
+  - weblink.router
+views:
+    # View tab title.
+  - title: Overview
+    # Optional unique id for direct access /lovelace/${id}
+    id: overview
+    # Optional background (overwrites the global background).
+    background: radial-gradient(crimson, skyblue)
+    # Each view can have a different theme applied. Theme should be defined in the frontend.
+    theme: dark-mode
+    # The cards to show on this view.
+    cards:
+        # The filter card will filter entities for their state
+      - type: entity-filter
+        entities:
+          - device_tracker.oeusqgsv_marcel
+          - device_tracker.galaxys8
+          - device_tracker.samsunggalaxys7edge
+        state_filter:
+          - 'home'
+        card:
+          type: glance
+          title: People that are home
+
+      - type: entities
+        title: People
+        entities:
+          - entity: sensor.marcel_to_home
+            name: Marcel to Home Time
+          - entity: proximity.marcel_to_home
+            name: Marcel to Home Distance           
+      
+      - type: entities
+        title: Weblinks
+        show_header_toggle: true
+        entities:
+          - type: divider
+          - type: weblink
+            name: TV Series Downloads
+            url: http://10.2.101.1:8989/
+            icon: mdi:television-classic
+          - type: weblink
+            name: Movie Downloads
+            url: http://10.2.101.1:7878/
+            icon: mdi:filmstrip
+          - type: weblink
+            name: NZB Downloader
+            url: http://10.2.101.1:8080/
+            icon: mdi:cloud-download
+          - type: weblink
+            name: PLEX
+            url: http://10.2.31.1:32400
+            icon: mdi:plex
+          - type: divider
+          - type: weblink
+            name: Firewall
+            url: https://10.2.1.1:4444
+            icon: mdi:security
+          - type: weblink
+            name: WLAN Controller
+            url: https://10.2.101.1:8443
+            icon: mdi:cellphone-wireless
+          - type: divider
+          - type: weblink
+            name: NAS 01
+            url: http://10.2.31.1:8080
+            icon: mdi:nas
+          - type: weblink
+            name: NAS 02
+            url: http://10.2.31.2:8080
+            icon: mdi:nas
+          - type: divider
+          - type: weblink
+            name: 3CX Phone System 
+            url: https://10.2.10.1:5001
+            icon: mdi:phone-in-talk
+          - type: divider
+
+      - type: weather-forecast
+        entity: weather.dark_sky
+      
+
+
+
+      - type: vertical-stack
+        cards:
+
+          - type: picture-entity
+            entity: group.stube_lights
+            camera_image: camera.stube
+
+          - type: glance
+            title: Stube
+            entities:
+              - entity: binary_sensor.eg_stube_motion_sensor
+                name: Bewegung
+              - entity: group.stube_lights
+                name: Licht
+              - entity: sensor.zipatile_temperature
+                name: Temperatur
+              - entity: climate.stube_heizung
+                name: Heizung
+
+
+      - type: vertical-stack
+        cards:
+
+          - type: picture-entity
+            entity: light.1st_mediaroom_licht_level
+            camera_image: camera.mediaroom
+
+          - type: glance
+            title: Mediaroom
+            entities:
+              - entity: binary_sensor.1st_media_motion_sensor
+                name: Bewegung
+              - entity: light.1st_mediaroom_licht_level
+                name: Licht
+              - entity: sensor.1st_media_motion_temperature
+                name: Temperatur
+
+
+
+
+      - type: glance
+        title: Schlafzimmer
+        entities:
+          - entity: binary_sensor.dach_schlaf_motion_sensor
+            name: Bewegung
+          - entity: light.dach_schlaf_licht_level
+            name: Licht
+          - entity: sensor.dach_schlaf_motion_temperature
+            name: Temperatur
+          - entity: climate.schlafzimmer_heizung
+            name: Heizung
+          - entity: climate.schlafzimmer_kuhlung
+            name: Kühlung
+
+      - type: glance
+        title: Leona
+        entities:
+          - light.1st_leona_level
+
+
+
+
+      - type: picture-glance
+        title: Stube
+        entities:
+          - switch.eg_stube_licht_1_switch
+          - climate.stube_heizung
+          - binary_sensor.eg_stube_motion_sensor
+          - group.stube_lights
+        camera_image: camera.stube
+
+
+
+
+
+    # Specify a tab icon if you want the view tab to be an icon.
+  - icon: mdi:home-assistant
+    # Title of the view. Will be used as the tooltip for tab icon
+    title: Testing
+    cards:
+
+      - type: picture-elements
+        image: https://www.home-assistant.io/images/default-social.png
+        camera_image: camera.stube
+
+        elements:
+          - type: state-icon
+            tap_action: toggle
+            entity: switch.eg_stube_licht_1_switch
+            style:
+              top: 47%
+              left: 42%
+          - type: state-label
+            entity: sensor.zipatile_temperature
+            style:
+              top: 82%
+              left: 79%
+          - type: service-button
+            title: Turn lights off
+            style:
+              top: 95%
+              left: 60%
+            service: homeassistant.turn_off
+            service_data:
+              entity_id: group.eg
+          - type: icon
+            icon: mdi:home
+            tap_action: navigate
+            navigation_path: /lovelace/overview
+            style:
+              top: 10%
+              left: 10%
+
+      - type: map
+        aspect_ratio: 100%
+        default_zoom: 9
+        entities:
+          - device_tracker.oeusqgsv_marcel
+
+      - type: entities
+        title: People
+        entities:
+          - entity: sensor.marcel_to_home
+            name: Marcel to Home

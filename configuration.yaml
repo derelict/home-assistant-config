@@ -1,0 +1,580 @@
+homeassistant:
+  # Name of the location where Home Assistant is running
+  name: Home
+  # Location required to calculate the time the sun rises and sets
+  latitude: !secret home_latitude
+  longitude: !secret home_longitude
+  # Impacts weather/sunrise data (altitude above sea level in meters)
+  elevation: 200
+  # metric for Metric, imperial for Imperial
+  unit_system: metric
+  # Pick yours from here: http://en.wikipedia.org/wiki/List_of_tz_database_time_zones
+  time_zone: Europe/Zurich
+  # Customization file
+  customize: !include customize.yaml
+  customize_glob: !include customize_glob.yaml
+
+  packages: !include_dir_named packages
+  
+# Show links to resources in log and frontend
+#introduction:
+
+# Enables the frontend
+frontend:
+
+zone: !include zones.yaml
+
+recorder:
+  purge_keep_days: 3
+  
+# Enables configuration UI
+config:
+
+http:
+  # Secrets are defined in the file secrets.yaml
+    api_password: !secret http_password
+  # Uncomment this if you are using SSL/TLS, running in Docker container, etc.
+    base_url: !secret base_url
+
+# Checks for available updates
+# Note: This component will send some information about your system to
+# the developers to assist with development of Home Assistant.
+# For more information, please see:
+# https://home-assistant.io/blog/2016/10/25/explaining-the-updater/
+updater:
+  # Optional, allows Home Assistant developers to focus on popular components.
+  include_used_components: true
+
+# Discover some devices automatically
+discovery:
+    ignore:
+        - axis
+        - samsung_tv
+
+logger:
+  default: error
+
+    
+# Allows you to issue voice commands from the frontend in enabled browsers
+conversation:
+
+# Enables support for tracking state changes over time
+history:
+  include:
+    domains:
+      - sensor
+      
+# View all events in a logbook
+logbook:
+  include:
+    domains:
+      - sensor
+      
+# Enables a map showing the location of tracked devices
+map:
+
+# Track the sun
+sun:
+
+# Text to speech
+tts:
+  - platform: google
+    language: 'de'
+
+# Cloud
+cloud:
+
+group: !include groups.yaml
+
+automation: !include automations.yaml
+# automation: !include_dir_merge_list automation/
+
+script: !include scripts.yaml
+
+lock:
+  - platform: nuki
+    host: 10.2.20.147
+    token: !secret nuki_token
+    
+mqtt:
+  broker: 10.2.151.1
+  client_id: home-assistant-1
+  discovery: true
+  discovery_prefix: homeassistant
+
+
+# mqtt_statestream:
+#   base_topic: homeassistant/statestream/master/topic
+#   publish_attributes: true
+#   publish_timestamps: true
+# 
+# 
+# mqtt_eventstream:
+#   publish_topic: hommeassistant/eventstream/master/topic
+  
+
+device_tracker:
+  - platform: owntracks
+    waypoints: True
+    mqtt_topic: "owntracks/#"
+    waypoint_whitelist:
+      - oeusqgsv_marcel
+      - marcel
+      - oeusqgsv
+    new_device_defaults:
+      track_new_devices: False
+      hide_if_away: False
+    region_mapping:
+      home_large: home
+      
+  - platform: unifi
+    host: 10.2.101.1
+    username: root
+    password: !secret default_password_1
+    verify_ssl: False
+    ssid_filter:
+      - 'MATRIX'
+      - 'MATRIX-GUEST'
+    new_device_defaults:
+      track_new_devices: False
+      hide_if_away: False
+      
+doorbird:
+ devices:
+   - host: 10.2.20.107
+     username: !secret doorbird_user
+     password: !secret doorbird_password
+     hass_url_override: 10.2.151.1
+
+ffmpeg:
+  ffmpeg_bin: /usr/bin/ffmpeg
+
+camera:
+  - platform: doorbird
+    name: "Doorbird"
+  - platform: netatmo
+    name: "Welcome"
+  - platform: ffmpeg
+    name: Mediaroom
+    input: !secret mediaroom_cam_secret_url
+    extra_arguments: -q:v 5
+    
+netatmo:
+  api_key: !secret netatmo_api
+  secret_key: !secret netatmo_secret
+  username: !secret default_user_2
+  password: !secret default_password_2 
+
+zwave:
+  usb_path: /dev/ttyACM0  
+
+media_player:
+  
+  - platform: spotify
+    name: Spotify
+    client_id: !secret spotify_client_id
+    client_secret: !secret spotify_secret
+
+  - platform: denonavr
+    host: 10.2.25.22
+    name: Mediaroom AVR Player
+    show_all_sources: True
+
+  - platform: plex
+
+  #- platform: denon
+  #  host: 10.2.25.22
+  #  name: Mediaroom AVR
+
+history_graph:
+  gr1:
+    name: Temperature Graph
+    entities:
+      - sensor.waschkueche_floodsensor_temperature
+    hours_to_show: 240
+    refresh: 60
+    
+
+climate:
+  - platform: generic_thermostat
+    name: Schlafzimmer Heizung
+    heater: switch.dach_heizung_switch
+    target_sensor: sensor.dach_schlaf_motion_temperature
+    min_temp: 15
+    max_temp: 23
+    ac_mode: False
+    target_temp: 19
+    cold_tolerance: 0.3
+    hot_tolerance: 0.3
+    min_cycle_duration:
+      minutes: 5
+    initial_operation_mode: "off"
+    away_temp: 16  
+
+  - platform: generic_thermostat
+    name: Stube Heizung
+    heater: group.stube_heater
+    target_sensor: sensor.zipatile_temperature
+    min_temp: 15
+    max_temp: 24
+    ac_mode: False
+    target_temp: 23
+    cold_tolerance: 0.3
+    hot_tolerance: 0.3
+    min_cycle_duration:
+      minutes: 5
+    initial_operation_mode: "auto"
+    away_temp: 16  
+
+  - platform: generic_thermostat
+    name: Schlafzimmer Kühlung
+    heater: input_boolean.dach_schlaf_climate
+    target_sensor: sensor.dach_schlaf_motion_temperature
+    min_temp: 15
+    max_temp: 23
+    ac_mode: True
+    target_temp: 19
+    cold_tolerance: 0.3
+    hot_tolerance: 0.3
+    min_cycle_duration:
+      minutes: 5
+    initial_operation_mode: "auto"
+    away_temp: 30  
+    
+
+binary_sensor:
+  - platform: mqtt
+    name: "PC Idle State"
+    state_topic: "/eg/state/werkstatt/idle"
+    payload_on: "on"
+    payload_off: "off"
+    qos: 0
+    device_class: connectivity
+  - platform: mqtt
+    name: "PC Video App State"
+    icon: mdi:video
+    state_topic: "/eg/state/werkstatt/fullscreenvideo"
+    payload_on: "on"
+    payload_off: "off"
+    qos: 0
+    device_class: plug
+
+  - platform: mqtt
+    name: "Zipatile Motion"
+    state_topic: !secret zipatile_motion_topic
+    value_template: "{{ value_json.value }}"
+    payload_on: "MOTION"
+    payload_off: "NO MOTION"
+
+weather:
+  - platform: darksky
+    api_key: !secret darksky_api
+
+sensor:
+
+  - platform: google_travel_time
+    name: Marcel to Work
+    api_key: !secret google_api
+    origin: device_tracker.oeusqgsv_marcel
+    destination: zone.marcel_work
+    options:
+        mode: driving
+
+  - platform: google_travel_time
+    name: Marcel to Home
+    api_key: !secret google_api
+    origin: device_tracker.oeusqgsv_marcel
+    destination: zone.home
+    options:
+        mode: driving
+        
+
+  - platform: mqtt
+    name: "Zipatile Temperature"
+    state_topic: !secret zipatile_Temperature_topic
+    value_template: "{{ value_json.value }}"
+    unit_of_measurement: '°C'
+  - platform: mqtt
+    name: "Zipatile Humidity"
+    state_topic: !secret zipatile_Humidity_topic
+    value_template: "{{ value_json.value }}"
+    unit_of_measurement: '%'
+  - platform: mqtt
+    name: "Zipatile Luminance"
+    state_topic: !secret zipatile_Luminance_topic
+    value_template: "{{ value_json.value }}"
+
+  - platform: mqtt
+    state_topic: !secret bt_addr_marcel_mobile
+    value_template: '{{ value_json.confidence }}'
+    unit_of_measurement: '%'
+    name: 'Marcel Mobile BT Stube'
+
+  - platform: mqtt
+    state_topic: !secret bt_addr_marcel_watch
+    value_template: '{{ value_json.confidence }}'
+    unit_of_measurement: '%'
+    name: 'Marcel Watch BT Stube'
+
+
+
+  - platform: yr
+
+  - platform: plex
+    host: 10.2.31.1
+
+  - platform: darksky
+    api_key: !secret darksky_api
+    language: de
+    monitored_conditions:
+      - summary
+      - precip_type
+      - precip_intensity
+      - precip_probability
+      - precip_accumulation
+      - precip_intensity_max
+      - temperature
+      - apparent_temperature
+      - dew_point
+      - wind_speed
+      - cloud_cover
+      - humidity
+      - visibility
+      - minutely_summary
+      - hourly_summary
+      - daily_summary
+      - temperature_low
+      - temperature_high
+      - apparent_temperature_max
+      - apparent_temperature_min
+      - icon
+      - nearest_storm_distance
+      
+  - platform: mqtt
+    name: "Shield 01 App Name"
+    state_topic: "/adb/shield/10.2.71.1/appname"
+    qos: 0
+  - platform: mqtt
+    name: "Shield 01 Video Playback"
+    state_topic: "/adb/shield/10.2.71.1/mVideoPlayback"
+    qos: 0 
+  - platform: mqtt
+    name: "Shield 01 Focused App"
+    state_topic: "/adb/shield/10.2.71.1/focusapp"
+    qos: 0
+  - platform: mqtt
+    name: "Shield 01 Focused Window"
+    state_topic: "/adb/shield/10.2.71.1/focuswindow"
+    qos: 0  
+  - platform: mqtt
+    name: "Shield 01 Wake State"
+    state_topic: "/adb/shield/10.2.71.1/mWakefulness"
+    qos: 0
+  - platform: mqtt
+    name: "Shield 01 Display State"
+    state_topic: "/adb/shield/10.2.71.1/mDisplayPowerState"
+    qos: 0    
+  - platform: mqtt
+    name: "Shield 01 Power State"
+    state_topic: "/adb/shield/10.2.71.1/powerstate"
+    qos: 0 
+  - platform: mqtt
+    name: "Shield 01 Wakelocks"
+    state_topic: "/adb/shield/10.2.71.1/myWakeLocks"
+    qos: 0
+
+  - platform: mqtt
+    name: "Shield 02 App Name"
+    state_topic: "/adb/shield/10.2.71.2/appname"
+    qos: 0
+  - platform: mqtt
+    name: "Shield 02 Video Playback"
+    state_topic: "/adb/shield/10.2.71.2/mVideoPlayback"
+    qos: 0 
+  - platform: mqtt
+    name: "Shield 02 Focused App"
+    state_topic: "/adb/shield/10.2.71.2/focusapp"
+    qos: 0
+  - platform: mqtt
+    name: "Shield 02 Focused Window"
+    state_topic: "/adb/shield/10.2.71.2/focuswindow"
+    qos: 0  
+  - platform: mqtt
+    name: "Shield 02 Wake State"
+    state_topic: "/adb/shield/10.2.71.2/mWakefulness"
+    qos: 0
+  - platform: mqtt
+    name: "Shield 02 Display State"
+    state_topic: "/adb/shield/10.2.71.2/mDisplayPowerState"
+    qos: 0    
+  - platform: mqtt
+    name: "Shield 02 Power State"
+    state_topic: "/adb/shield/10.2.71.2/powerstate"
+    qos: 0 
+  - platform: mqtt
+    name: "Shield 02 Wakelocks"
+    state_topic: "/adb/shield/10.2.71.2/myWakeLocks"
+    qos: 0    
+
+  - platform: mqtt
+    name: "Shield 03 App Name"
+    state_topic: "/adb/shield/10.2.71.3/appname"
+    qos: 0
+  - platform: mqtt
+    name: "Shield 03 Video Playback"
+    state_topic: "/adb/shield/10.2.71.3/mVideoPlayback"
+    qos: 0 
+  - platform: mqtt
+    name: "Shield 03 Focused App"
+    state_topic: "/adb/shield/10.2.71.3/focusapp"
+    qos: 0
+  - platform: mqtt
+    name: "Shield 03 Focused Window"
+    state_topic: "/adb/shield/10.2.71.3/focuswindow"
+    qos: 0  
+  - platform: mqtt
+    name: "Shield 03 Wake State"
+    state_topic: "/adb/shield/10.2.71.3/mWakefulness"
+    qos: 0
+  - platform: mqtt
+    name: "Shield 03 Display State"
+    state_topic: "/adb/shield/10.2.71.3/mDisplayPowerState"
+    qos: 0    
+  - platform: mqtt
+    name: "Shield 03 Power State"
+    state_topic: "/adb/shield/10.2.71.3/powerstate"
+    qos: 0 
+  - platform: mqtt
+    name: "Shield 03 Wakelocks"
+    state_topic: "/adb/shield/10.2.71.3/myWakeLocks"
+    qos: 0    
+    
+wake_on_lan:
+  
+switch:
+  - platform: mqtt
+    name: "PC Default Music"
+    state_topic: "/eg/state/werkstatt/music"
+    command_topic: "/eg/state/werkstatt/music/set"
+    payload_on: "on"
+    payload_off: "off"
+    optimistic: false
+    qos: 0
+    retain: true
+    
+  - platform: mqtt
+    name: "Shield 01 Power"
+    state_topic: "/adb/shield/10.2.71.1/powerstate"
+    command_topic: "/adb/shield/10.2.71.1/powerstate/set"
+    payload_on: "on"
+    payload_off: "off"
+    optimistic: false
+    qos: 0
+    retain: true    
+
+  - platform: mqtt
+    name: "Shield 02 Power"
+    state_topic: "/adb/shield/10.2.71.2/powerstate"
+    command_topic: "/adb/shield/10.2.71.2/powerstate/set"
+    payload_on: "on"
+    payload_off: "off"
+    optimistic: false
+    qos: 0
+    retain: true  
+
+  - platform: mqtt
+    name: "Shield 03 Power"
+    state_topic: "/adb/shield/10.2.71.3/powerstate"
+    command_topic: "/adb/shield/10.2.71.3/powerstate/set"
+    payload_on: "on"
+    payload_off: "off"
+    optimistic: false
+    qos: 0
+    retain: true  
+
+  - platform: mqtt
+    name: "Garage Door"
+    state_topic: "/rpi_support/rpi-021/garage_door"
+    command_topic: "/rpi_support/rpi-021/garage_door/set"
+    payload_on: "open"
+    payload_off: "close"
+    optimistic: false
+    qos: 0
+    retain: false  
+
+input_boolean:
+  pc_power:
+    name: PC Power
+    initial: off
+    icon: mdi:power
+  werstatt_charger_active:
+    name: Werkstatt Charger Active
+    initial: off
+  
+  home_occupancy:
+    name: Home Occupancy
+    
+alarm_control_panel:
+  - platform: manual_mqtt
+    state_topic: /home/alarm
+    command_topic: /home/alarm/set
+  
+image_processing:
+  - platform: facebox
+    ip_address: 10.2.31.1
+    port: 32768
+    source:
+      - entity_id: camera.stube
+        name: Stube Camera
+      - entity_id: camera.mediaroom
+        name: Media Room
+      - entity_id: camera.doorbird_1_live
+        name: Front Door
+
+proximity:
+  marcel_to_home:
+    ignored_zones:
+      - marcel_work
+      - marcel_work_large
+    devices:
+      - device_tracker.oeusqgsv_marcel
+    tolerance: 50
+    unit_of_measurement: km
+
+
+# https://github.com/Instagraeme/Home-Assistant-Configuration/search?q=Graeme+Work+to+Home&unscoped_q=Graeme+Work+to+Home
+
+
+# sensor: !include_dir_merge_list sensor/
+# https://community.home-assistant.io/t/call-scripts-with-parameters/49631/2  
+
+# automation: !include_dir_merge_list automation/
+# binary_sensor: !include_dir_merge_list binary_sensor/
+# camera: !include_dir_merge_list camera/
+# climate: !include_dir_merge_list climate/
+# device_tracker: !include_dir_merge_list device_tracker/
+# group: !include_dir_merge_named group/
+# input_boolean: !include_dir_merge_named input_boolean/
+# input_number: !include_dir_merge_named input_number/
+# input_select: !include_dir_merge_named input_select/
+# light: !include_dir_merge_list light/
+# media_player: !include_dir_merge_list media_player/
+# panel_custom: !include panel_custom.yaml
+# panel_iframe: !include_dir_merge_named panel_iframe/
+# sensor: !include_dir_merge_list sensor/
+# scene: !include_dir_merge_list scene/
+# switch: !include_dir_merge_list switch/
+# script: !include_dir_merge_named script/
+# shell_command: !include_dir_merge_named shell_command/
+# zone: !include_dir_merge_list zone/
+  
+  
+# https://community.openhab.org/t/hm-tc-it-wm-w-eu-thermostat-set-control-mode/34314/5    
+# https://community.openhab.org/t/habpanel-widget-virtual-thermostat-onoff-appliance-scheduling/37834  
+# https://community.home-assistant.io/t/chromecast-radio-with-station-and-player-selection/12732
+# https://community.home-assistant.io/t/android-nvidia-shield-application-based-automation/25928?source_topic_id=20594
+# https://community.home-assistant.io/t/presence-awareness-by-face-recognition/26231/18
+# https://community.home-assistant.io/t/bluetooth-presence-detection-without-raspberry-pi-3/35558/4
+
+# https://community.home-assistant.io/t/creating-a-alarm-clock/410/315
+
