@@ -34,11 +34,41 @@ input_boolean:
   dach_schlaf_soundbar:
     name: Soundbar
 
+
+##############################################################################################################################
+# INPUT SELECT
+##############################################################################################################################
+
+input_select:
+  zipatile_rgb:
+    name: Zipatile Siren
+    options:
+      - STOP_SOUND
+      - EMERGENCY
+      - FIRE_ALERT
+      - AMBULANCE
+      - POLICE_CAR
+      - DOOR_CHIME
+      - BEEP
+    initial: STOP_SOUND
+
 ##############################################################################################################################
 # BASIC AUTOMATION (Turn OFF and ON and select INPUTS where neccessary)
 ##############################################################################################################################
 
 automation:
+
+  - alias: Set Zipatile Siren
+    trigger:
+      platform: state
+      entity_id: input_select.zipatile_rgb
+    action:
+      service: mqtt.publish
+      data_template:
+        topic: !secret zipatile_siren_command
+        retain: true
+        payload: "{\"command\":\"SET_STATE\",\"value\":\"{{ states('input_select.zipatile_rgb') }}\"}"
+
 
 ###############################################################
 # STUBE

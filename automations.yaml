@@ -5,7 +5,7 @@
       - platform: state
         entity_id: 
           - binary_sensor.dach_gang_motion_sensor
-          - binary_sensor.1st_gang_motion_sensor
+          - binary_sensor.1st_gang_neo_motion_sensor
           - binary_sensor.dach_schlaf_motion_sensor
           - binary_sensor.dach_bad_motion_sensor
           - binary_sensor.ug_gang_motion_sensor
@@ -22,7 +22,7 @@
       - platform: state
         entity_id: 
           - binary_sensor.dach_gang_motion_sensor
-          - binary_sensor.1st_gang_motion_sensor
+          - binary_sensor.1st_gang_neo_motion_sensor
           - binary_sensor.dach_schlaf_motion_sensor
           - binary_sensor.dach_bad_motion_sensor
           - binary_sensor.ug_gang_motion_sensor
@@ -396,7 +396,7 @@
         entity_id: binary_sensor.eg_gang_motion_sensor
         to: 'on'
       - platform: state
-        entity_id: binary_sensor.1st_gang_motion_sensor
+        entity_id: binary_sensor.1st_gang_neo_motion_sensor
         to: 'on'      
   action:
       - service: homeassistant.turn_on
@@ -411,7 +411,7 @@
         entity_id: binary_sensor.eg_gang_motion_sensor
         to: 'off'
       - platform: state
-        entity_id: binary_sensor.1st_gang_motion_sensor
+        entity_id: binary_sensor.1st_gang_neo_motion_sensor
         to: 'off'
 
   condition: 
@@ -424,12 +424,57 @@
         entity_id: binary_sensor.eg_gang_motion_sensor
         state: 'off'
       - condition: state
-        entity_id: binary_sensor.1st_gang_motion_sensor
+        entity_id: binary_sensor.1st_gang_neo_motion_sensor
         state: 'off'        
   action:
       - service: homeassistant.turn_off
         entity_id: switch.eg_gang_licht_switch          
 
+
+
+
+
+
+##########################################
+# 1ST Leona
+##########################################  
+
+# - alias: turn Leona light on
+#   trigger:
+#       - platform: state
+#         entity_id: 
+#           - binary_sensor.1st_leona_neo_sensor
+#         to: 'on'  
+#   condition:
+#     condition: and
+#     conditions:
+#       - condition: state
+#         entity_id: light.1st_leona_level
+#         state: 'off'
+#   action:
+#     service: light.turn_on
+#     data_template:
+#       entity_id: light.1st_leona_level
+#       brightness: >
+#         {%- if now().strftime('%H')| int >= 19 %}
+#           40
+#         {%- elif now().strftime('%H')| int < 8 %}
+#           40
+#         {%- elif now().strftime('%H')| int >= 8 %}
+#           255
+#         {%- endif %}
+# 
+# - alias: turn Leona light off
+#   trigger:
+#       - platform: state
+#         entity_id:
+#           - binary_sensor.1st_leona_neo_sensor
+#         to: 'off'
+#         for:
+#           minutes: 5
+#   action:
+#     - service: light.turn_off
+#       entity_id: light.1st_leona_level 
 
 ##########################################
 # 1ST Light Control
@@ -441,7 +486,7 @@
         entity_id: 
           - binary_sensor.dach_gang_motion_sensor
           - binary_sensor.eg_gang_motion_sensor
-          - binary_sensor.1st_gang_motion_sensor
+          - binary_sensor.1st_gang_neo_motion_sensor
         to: 'on'
   action:
       - service: homeassistant.turn_on
@@ -453,7 +498,7 @@
         entity_id: 
           - binary_sensor.dach_gang_motion_sensor
           - binary_sensor.eg_gang_motion_sensor
-          - binary_sensor.1st_gang_motion_sensor
+          - binary_sensor.1st_gang_neo_motion_sensor
         to: 'off'
         for:
           minutes: 2
@@ -467,7 +512,7 @@
         entity_id: binary_sensor.eg_gang_motion_sensor
         state: 'off'
       - condition: state
-        entity_id: binary_sensor.1st_gang_motion_sensor
+        entity_id: binary_sensor.1st_gang_neo_motion_sensor
         state: 'off'        
   action:
       - service: homeassistant.turn_off
@@ -483,7 +528,7 @@
       - platform: state
         entity_id: 
           - binary_sensor.dach_gang_motion_sensor
-          - binary_sensor.1st_gang_motion_sensor
+          - binary_sensor.1st_gang_neo_motion_sensor
           - binary_sensor.dach_schlaf_motion_sensor
         to: 'on'      
   action:
@@ -495,7 +540,7 @@
       - platform: state
         entity_id:
           - binary_sensor.dach_gang_motion_sensor
-          - binary_sensor.1st_gang_motion_sensor
+          - binary_sensor.1st_gang_neo_motion_sensor
           - binary_sensor.dach_schlaf_motion_sensor
         to: 'off'
         for:
@@ -507,7 +552,7 @@
         entity_id: binary_sensor.dach_gang_motion_sensor
         state: 'off'
       - condition: state
-        entity_id: binary_sensor.1st_gang_motion_sensor
+        entity_id: binary_sensor.1st_gang_neo_motion_sensor
         state: 'off'        
       - condition: state
         entity_id: binary_sensor.dach_schlaf_motion_sensor

@@ -8,21 +8,15 @@ stairways:
     entities:
         - group.stairways_motion
         - group.stairways_light
-        - binary_sensor.ug_gang_motion_sensor
-        - binary_sensor.eg_gang_motion_sensor
-        - binary_sensor.1st_gang_motion_sensor
-        - binary_sensor.dach_gang_motion_sensor
-        - switch.ug_gang_licht_switch
-        - switch.eg_gang_licht_switch
-        - switch.1st_gang_licht_switch
-        - switch.dach_gang_licht_switch
 
 stairways_motion:
     name: Motion Sensors
     entities:
         - binary_sensor.ug_gang_motion_sensor
         - binary_sensor.eg_gang_motion_sensor
-        - binary_sensor.1st_gang_motion_sensor
+        - binary_sensor.1st_gang_neo_motion_sensor
+        - sensor.1st_gang_neo_motion_sensor_luminance
+        - sensor.1st_gang_neo_motion_sensor_temperature
         - binary_sensor.dach_gang_motion_sensor
         
 stairways_light:
@@ -116,6 +110,10 @@ mediapc_state:
         - binary_sensor.pc_idle_state
         - binary_sensor.pc_video_app_state
         - switch.pc_default_music
+        - sensor.processor_use
+        - sensor.load_1m
+        - sensor.memory_free
+        - sensor.disk_use_percent_
         
 werkstatt_lights:
     name: Werkstatt Licht
@@ -164,6 +162,9 @@ stube:
         - sensor.zipatile_humidity
         - sensor.zipatile_luminance
         - sensor.zipatile_temperature
+        - sensor.zipatile_noise
+        - sensor.zipatile_touch
+        - input_select.zipatile_rgb
         - camera.stube
         - media_player.stube
         - media_player.stube_home
@@ -317,6 +318,10 @@ leona:
     name: Leona
     entities:
         - light.1st_leona_level
+        - binary_sensor.1st_leona_neo_sensor
+        - sensor.1st_leona_neo_sensor_luminance
+        - sensor.1st_leona_neo_sensor_temperature
+
 
 ##########################################################
 # Jason
@@ -327,6 +332,9 @@ jason:
     entities:
         - switch.1st_jason_licht_switch
         - media_player.jason_home
+        - binary_sensor.1st_jason_neo_sensor
+        - sensor.1st_jason_neo_sensor_luminance
+        - sensor.1st_jason_neo_sensor_temperature
 
 ################################################################################################
 # DACH

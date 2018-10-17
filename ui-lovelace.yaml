@@ -113,6 +113,30 @@ views:
               - entity: climate.stube_heizung
                 name: Heizung
 
+          - type: sensor
+            entity: sensor.zipatile_temperature
+            name: Temperatur
+            height: 75
+            line_color: "#3498db"
+
+          - type: gauge
+            title: Noise
+            unit_of_measurement: '%'
+            entity: sensor.zipatile_noise
+            severity:
+              green: 0
+              yellow: 45
+              red: 85
+
+          - type: gauge
+            title: CPU Load
+            unit_of_measurement: '%'
+            entity: sensor.processor_use
+            severity:
+              green: 0
+              yellow: 45
+              red: 85
+
 
       - type: vertical-stack
         cards:

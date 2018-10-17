@@ -157,8 +157,14 @@ camera:
   - platform: ffmpeg
     name: Mediaroom
     input: !secret mediaroom_cam_secret_url
-    extra_arguments: -q:v 5
-    
+    extra_arguments: -q:v 2
+  - platform: ffmpeg
+    name: Stube Ecke
+    extra_arguments: -q:v 2 -vf hflip
+    input: rtmp://10.2.20.108/zipatile/1
+
+#-q:v 2    
+
 netatmo:
   api_key: !secret netatmo_api
   secret_key: !secret netatmo_secret
@@ -272,6 +278,15 @@ weather:
 
 sensor:
 
+  - platform: systemmonitor
+    resources:
+      - type: disk_use_percent
+        arg: /
+      - type: memory_free
+      - type: load_1m
+      - type: processor_use
+
+
   - platform: google_travel_time
     name: Marcel to Work
     api_key: !secret google_api
@@ -303,6 +318,31 @@ sensor:
     name: "Zipatile Luminance"
     state_topic: !secret zipatile_Luminance_topic
     value_template: "{{ value_json.value }}"
+  - platform: mqtt
+    name: "Zipatile Noise"
+    state_topic: !secret zipatile_Noise_topic
+    value_template: "{{ value_json.value }}"
+  - platform: mqtt
+    name: "Zipatile Touch"
+    state_topic: !secret zipatile_Touch_topic
+    value_template: "{{ value_json.value }}"
+
+# zipato/zipatile/$ZIPATILE_SERIAL/siren/commands
+
+# {"command":"SET_STATE","value":"EMERGENCY"}
+# {"command":"SET_STATE","value":"FIRE_ALERT"}"
+
+# zipato/zipatile/sdfdsdf/rgb/events
+# {"command":"SET_STATE","value":"0000FF"}
+
+# STOP_SOUND
+# EMERGENCY
+# FIRE_ALERT
+# AMBULANCE
+# POLICE_CAR
+# DOOR_CHIME
+# BEEP
+
 
   - platform: mqtt
     state_topic: !secret bt_addr_marcel_mobile
@@ -540,6 +580,12 @@ proximity:
       - device_tracker.oeusqgsv_marcel
     tolerance: 50
     unit_of_measurement: km
+
+influxdb:
+  host: 10.2.31.1
+  port: 32774
+  database: home_assistant
+
 
 
 # https://github.com/Instagraeme/Home-Assistant-Configuration/search?q=Graeme+Work+to+Home&unscoped_q=Graeme+Work+to+Home
