@@ -10,6 +10,7 @@ homeassistant:
   unit_system: metric
   # Pick yours from here: http://en.wikipedia.org/wiki/List_of_tz_database_time_zones
   time_zone: Europe/Zurich
+
   # Customization file
   customize: !include customize.yaml
   customize_glob: !include customize_glob.yaml
@@ -165,6 +166,21 @@ camera:
 
 #-q:v 2    
 
+notify:
+  - name: GMAIL SMTP Notifier
+    platform: smtp
+    server: smtp.gmail.com
+    port: 587
+    timeout: 15
+    sender: !secret gmail_mha_mail
+    encryption: starttls
+    username: !secret gmail_mha_mail
+    password: !secret gmail_mha_pw
+    recipient:
+      - !secret gmail_mha_mail
+    sender_name: Home Assistant
+
+
 netatmo:
   api_key: !secret netatmo_api
   secret_key: !secret netatmo_secret
@@ -172,7 +188,27 @@ netatmo:
   password: !secret default_password_2 
 
 zwave:
-  usb_path: /dev/ttyACM0  
+  usb_path: /dev/ttyACM0
+  autoheal: true
+  polling_interval: 60000
+  device_config_glob:
+    # We have an dedicated alarm system and not going to use these z-wave
+    # features; ignore.
+    "*_burglar*":
+      ignored: true
+      polling_intensity: 0
+    "*_alarm_type":
+      ignored: true
+      polling_intensity: 0
+    "*_alarm_level":
+      ignored: true
+      polling_intensity: 0
+    # Not sure why this is useful... I don't use it; ignore.
+    "*_sourcenodeid":
+      ignored: true
+    "*_ultraviolet":
+      ignored: true
+      
 
 media_player:
   

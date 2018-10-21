@@ -40,7 +40,7 @@ input_boolean:
 ##############################################################################################################################
 
 input_select:
-  zipatile_rgb:
+  zipatile_siren:
     name: Zipatile Siren
     options:
       - STOP_SOUND
@@ -61,13 +61,13 @@ automation:
   - alias: Set Zipatile Siren
     trigger:
       platform: state
-      entity_id: input_select.zipatile_rgb
+      entity_id: input_select.zipatile_siren
     action:
       service: mqtt.publish
       data_template:
         topic: !secret zipatile_siren_command
         retain: true
-        payload: "{\"command\":\"SET_STATE\",\"value\":\"{{ states('input_select.zipatile_rgb') }}\"}"
+        payload: "{\"command\":\"SET_STATE\",\"value\":\"{{ states('input_select.zipatile_siren') }}\"}"
 
 
 ###############################################################

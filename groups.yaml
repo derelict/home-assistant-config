@@ -15,9 +15,13 @@ stairways_motion:
         - binary_sensor.ug_gang_motion_sensor
         - binary_sensor.eg_gang_motion_sensor
         - binary_sensor.1st_gang_neo_motion_sensor
-        - sensor.1st_gang_neo_motion_sensor_luminance
-        - sensor.1st_gang_neo_motion_sensor_temperature
         - binary_sensor.dach_gang_motion_sensor
+        - sensor.eg_gang_temperature
+        - sensor.1st_gang_neo_motion_sensor_temperature
+        - sensor.dach_gang_motion_sensor_temperature
+        - sensor.eg_gang_luminance
+        - sensor.1st_gang_neo_motion_sensor_luminance
+        - sensor.dach_gang_motion_sensor_luminance
         
 stairways_light:
     name: Light
@@ -26,8 +30,7 @@ stairways_light:
         - switch.eg_gang_licht_switch
         - switch.1st_gang_licht_switch
         - switch.dach_gang_licht_switch
-
-    
+   
 
 ################################################################################################
 # Untergeschoss
@@ -164,7 +167,7 @@ stube:
         - sensor.zipatile_temperature
         - sensor.zipatile_noise
         - sensor.zipatile_touch
-        - input_select.zipatile_rgb
+        - input_select.zipatile_siren
         - camera.stube
         - media_player.stube
         - media_player.stube_home
@@ -179,6 +182,7 @@ stube:
         - image_processing.frontdoor_camera
         - climate.stube_heizung
         - sensor.eg_stube_motion_sensor_temperature
+        - sensor.eg_stube_motion_sensor_luminance
 
 stube_heater:
     name: Stube Heizung Switches
@@ -218,7 +222,7 @@ kuche:
         - switch.eg_kueche_licht_links_switch
         - switch.eg_kueche_licht_rechts_switch
         - binary_sensor.eg_kueche_motion_sensor
-        - sensor.eg_kueche_smoke_temperature
+        - sensor.eg_kueche_smoke_sensor_temperature
 
 
 ##########################################################

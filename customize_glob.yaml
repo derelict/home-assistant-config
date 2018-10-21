@@ -12,3 +12,15 @@
 
 "binary_sensor.*motion*":
     icon: mdi:run
+
+"*_burglar*":
+  ignored: true
+"*_alarm_type":
+  ignored: true
+"*_alarm_level":
+  ignored: true
+"*_sourcenodeid":
+  ignored: true
+"*_ultraviolet":
+  ignored: true
+

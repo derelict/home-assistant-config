@@ -132,34 +132,34 @@ input_select:
 
 
 group:
-  dach_schlaf_alarm:
-    name: Wake-Up Alarm Schlafzimmer
-    entities:
-    - sensor.time
-    - input_boolean.alarm_clock
-    - input_boolean.work_selector
-    - input_boolean.only_week_days
-    - input_number.alarm_hour
-    - input_number.alarm_minutes
-    - input_number.prepare_ready_time
-    - input_number.buffer_time
-    - input_number.wakeup_duration
-    - input_number.wakeup_max_brightness
-    - input_number.wakeup_max_volume
-    - input_number.test_volume
-    - input_number.test_brightness
-    - input_datetime.schlaf_alarm_clock_time
-    - sensor.alarmtime
-    - sensor.time_until_alarm
-    - sensor.time_of_next_alarm
-    - sensor.time_to_leave
-    - sensor.nextalarm
-    - sensor.marcel_to_work
-    - input_select.radio_wakeup
-    - sensor.wakeup_start_time_fadein
-    - sensor.wakeup_fadein_duration
-    - sensor.wakeup_vol_increase_count
-    - sensor.wakeup_light_increase_count
+    dach_schlaf_alarm:
+      name: Wake-Up Alarm Schlafzimmer
+      entities:
+      - sensor.time
+      - input_boolean.alarm_clock
+      - input_boolean.work_selector
+      - input_boolean.only_week_days
+      - input_number.alarm_hour
+      - input_number.alarm_minutes
+      - input_number.prepare_ready_time
+      - input_number.buffer_time
+      - input_number.wakeup_duration
+      - input_number.wakeup_max_brightness
+      - input_number.wakeup_max_volume
+      - input_number.test_volume
+      - input_number.test_brightness
+      - input_datetime.schlaf_alarm_clock_time
+      - sensor.alarmtime
+      - sensor.time_until_alarm
+      - sensor.time_of_next_alarm
+      - sensor.time_to_leave
+      - sensor.nextalarm
+      - sensor.marcel_to_work
+      - input_select.radio_wakeup
+      - sensor.wakeup_start_time_fadein
+      - sensor.wakeup_fadein_duration
+      - sensor.wakeup_vol_increase_count
+      - sensor.wakeup_light_increase_count
 
 sensor:
     - platform: template
