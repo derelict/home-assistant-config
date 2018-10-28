@@ -23,4 +23,7 @@
   ignored: true
 "*_ultraviolet":
   ignored: true
-
+"*_general":
+  ignored: true
+"*_seismic_intensity":
+  ignored: true    

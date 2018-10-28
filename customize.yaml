@@ -2,4 +2,24 @@ configurator.bha1ccae3703158local_10220107:
   hidden: true
 configurator.bha1ccae3703158local_armv5tejl_linux:
   hidden: true
-  
+
+binary_sensor.ug_waschkueche_floodsensor_2_sensor:
+  ignored: true
+
+binary_sensor.ug_waschkueche_floodsensor_2_general:
+  ignored: true
+
+binary_sensor.eg_kueche_floodsensor_general:
+  ignored: true
+
+binary_sensor.eg_kueche_floodsensor_sensor:
+  ignored: true
+
+sensor.eg_kueche_smokesensor_power_management:
+  ignored: true
+
+sensor.eg_kueche_smokesensor_system:
+  ignored: true
+
+sensor.eg_kueche_smokesensor_general:
+  ignored: true

@@ -16,6 +16,10 @@ homeassistant:
   customize_glob: !include customize_glob.yaml
 
   packages: !include_dir_named packages
+
+  whitelist_external_dirs:
+     - /tmp/
+
   
 # Show links to resources in log and frontend
 #introduction:
@@ -181,6 +185,9 @@ notify:
     sender_name: Home Assistant
 
 
+
+
+
 netatmo:
   api_key: !secret netatmo_api
   secret_key: !secret netatmo_secret
@@ -191,6 +198,7 @@ zwave:
   usb_path: /dev/ttyACM0
   autoheal: true
   polling_interval: 60000
+  config_path: /etc/openzwave/config
   device_config_glob:
     # We have an dedicated alarm system and not going to use these z-wave
     # features; ignore.
@@ -208,7 +216,10 @@ zwave:
       ignored: true
     "*_ultraviolet":
       ignored: true
-      
+    "*_general":
+      ignored: true      
+    "*_seismic_intensity":
+      ignored: true    
 
 media_player:
   
@@ -252,22 +263,7 @@ climate:
       minutes: 5
     initial_operation_mode: "off"
     away_temp: 16  
-
-  - platform: generic_thermostat
-    name: Stube Heizung
-    heater: group.stube_heater
-    target_sensor: sensor.zipatile_temperature
-    min_temp: 15
-    max_temp: 24
-    ac_mode: False
-    target_temp: 23
-    cold_tolerance: 0.3
-    hot_tolerance: 0.3
-    min_cycle_duration:
-      minutes: 5
-    initial_operation_mode: "auto"
-    away_temp: 16  
-
+  
   - platform: generic_thermostat
     name: Schlafzimmer Kühlung
     heater: input_boolean.dach_schlaf_climate
@@ -281,7 +277,24 @@ climate:
     min_cycle_duration:
       minutes: 5
     initial_operation_mode: "auto"
-    away_temp: 30  
+    away_temp: 30 
+
+  - platform: generic_thermostat
+    name: Stube Heizung
+    heater: group.stube_heater
+    target_sensor: sensor.netatmo_innenraum_temperature
+    min_temp: 15
+    max_temp: 26
+    ac_mode: False
+    target_temp: 23
+    cold_tolerance: 0.3
+    hot_tolerance: 0.3
+    min_cycle_duration:
+      minutes: 5
+    initial_operation_mode: "auto"
+    away_temp: 16  
+
+ 
     
 
 binary_sensor:

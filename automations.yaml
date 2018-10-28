@@ -18,6 +18,13 @@
           #        - /home/pi/snapshot1.jpg
           #        - /home/pi/snapshot2.jpg
 
+    - service:  notify.pushover
+      data:
+        message: Z-Wave Network is Ready
+        title: Z-Wave Status
+
+
+
 - alias: Z-Wave Complete
   initial_state: False
 
@@ -30,6 +37,12 @@
       data:
           title: 'Z-Wave Network - Complete'
           message: 'Z-Wave Network is Complete'
+
+    - service:  notify.pushover
+      data:
+        message: Z-Wave Network is Complete
+        title: Z-Wave Status
+        
 
 ##########################################################
 ## Misc
@@ -131,11 +144,23 @@
       entity_id: device_tracker.oeusqgsv_marcel
       zone: zone.marcel_home_large
       event: enter
+
+    - platform: zone
+      entity_id: device_tracker.oeusqgsv_jeanette
+      zone: zone.home
+      event: enter
+    - platform: zone
+      entity_id: device_tracker.oeusqgsv_jeanette
+      zone: zone.marcel_home_large
+      event: enter
+  
   action:
   - service: lock.unlock
     entity_id: lock.garage_
   - service: homeassistant.turn_on
     entity_id: switch.garage_door
+
+
 
 - alias: Re-Lock After unlock
   trigger:
@@ -163,11 +188,11 @@
     entity_id: switch.salon_licht_decke_switch
   - service: homeassistant.turn_on
     entity_id: switch.salon_licht_spiegel_switch
-  - service: media_player.play_media
-    data:
-        entity_id: media_player.jason_home
-        media_content_id: http://radiofm1.ice.infomaniak.ch/radiofm1-128.mp3
-        media_content_type: 'music'
+  #- service: media_player.play_media
+  #  data:
+  #      entity_id: media_player.jason_home
+  #      media_content_id: http://radiofm1.ice.infomaniak.ch/radiofm1-128.mp3
+  #      media_content_type: 'music'
         
 - alias: Turn off Salon light after last movement
   trigger:
@@ -181,9 +206,9 @@
     entity_id: switch.salon_licht_decke_switch
   - service: homeassistant.turn_off
     entity_id: switch.salon_licht_spiegel_switch
-  - service: media_player.media_stop
-    data:
-        entity_id: media_player.jason_home
+  #- service: media_player.media_stop
+  #  data:
+  #      entity_id: media_player.jason_home
 
         
         
@@ -469,22 +494,10 @@
 # 1ST Leona
 ##########################################  
 
-#- alias: turn Leona light on
-#  trigger:
-#      - platform: state
-#        entity_id: 
-#          - binary_sensor.1st_leona_neo_sensor
-#        to: 'on'  
-#  condition:
-#    condition: and
-#    conditions:
-#      - condition: state
-#        entity_id: light.1st_leona_level
-#        state: 'off'
 #      - condition: sun
 #        after: sunset
-#  action:
-#    service: light.turn_on
+
+
 #    data_template:
 #      entity_id: light.1st_leona_level
 #      brightness: >
@@ -495,18 +508,100 @@
 #        {%- elif now().strftime('%H')| int >= 8 %}
 #          255
 #        {%- endif %}
-#
-#- alias: turn Leona light off
-#  trigger:
-#      - platform: state
-#        entity_id:
-#          - binary_sensor.1st_leona_neo_sensor
-#        to: 'off'
-#        for:
-#          minutes: 5
-#  action:
-#    - service: light.turn_off
-#      entity_id: light.1st_leona_level 
+
+- alias: turn Leona light on
+  trigger:
+      - platform: state
+        entity_id: 
+          - binary_sensor.1st_leona_neo_sensor
+        to: 'on'  
+
+  condition:
+    condition: and
+    conditions:
+      - condition: state
+        entity_id: light.1st_leona_level
+        state: 'off'
+      - condition: time
+        after: '08:00:00'
+        before: '19:00:00'
+
+  action:
+    service: light.turn_on
+    entity_id: light.1st_leona_level
+
+#####################
+
+- alias: turn Leona light off
+  trigger:
+      - platform: state
+        entity_id:
+          - binary_sensor.1st_leona_neo_sensor
+        to: 'off'
+        for:
+          minutes: 15
+
+  condition:
+    condition: and
+    conditions:
+      - condition: time
+        after: '08:00:00'
+        before: '19:00:00'
+
+  action:
+    - service: light.turn_off
+      entity_id: light.1st_leona_level 
+
+
+##########################################
+# 1ST Jason
+##########################################  
+
+- alias: turn Jason light on
+  trigger:
+      - platform: state
+        entity_id: 
+          - binary_sensor.1st_jason_neo_sensor
+        to: 'on'  
+
+  condition:
+    condition: and
+    conditions:
+      - condition: state
+        entity_id: switch.1st_jason_licht_switch
+        state: 'off'
+      - condition: time
+        after: '08:00:00'
+        before: '19:00:00'
+
+  action:
+    service: homeassistant.turn_on
+    entity_id: switch.1st_jason_licht_switch
+
+#####################
+
+- alias: turn Jason light off
+  trigger:
+      - platform: state
+        entity_id:
+          - binary_sensor.1st_jason_neo_sensor
+        to: 'off'
+        for:
+          minutes: 15
+
+  condition:
+    condition: and
+    conditions:
+      - condition: time
+        after: '08:00:00'
+        before: '19:00:00'
+
+  action:
+    service: homeassistant.turn_off
+    entity_id: switch.1st_jason_licht_switch 
+
+
+
 
 ##########################################
 # 1ST Light Control

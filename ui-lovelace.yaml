@@ -23,26 +23,28 @@ views:
     # The cards to show on this view.
     cards:
         # The filter card will filter entities for their state
-      - type: entity-filter
+      - id: a97d5fd7c6344abe8d54fd2d1148a535  # Automatically created id
+        type: entity-filter
         entities:
           - device_tracker.oeusqgsv_marcel
-          - device_tracker.galaxys8
-          - device_tracker.samsunggalaxys7edge
+          - device_tracker.oeusqgsv_jeanette
         state_filter:
-          - 'home'
+          - home
         card:
           type: glance
           title: People that are home
 
-      - type: entities
+      - id: de3bedfdd3db45f69c438b94ebbc44a8  # Automatically created id
+        type: entities
         title: People
         entities:
           - entity: sensor.marcel_to_home
             name: Marcel to Home Time
           - entity: proximity.marcel_to_home
-            name: Marcel to Home Distance           
-      
-      - type: entities
+            name: Marcel to Home Distance
+
+      - id: 556aa40c56024e32ae71cd7e2715aec5  # Automatically created id
+        type: entities
         title: Weblinks
         show_header_toggle: true
         entities:
@@ -83,18 +85,34 @@ views:
             icon: mdi:nas
           - type: divider
           - type: weblink
-            name: 3CX Phone System 
+            name: 3CX Phone System
             url: https://10.2.10.1:5001
             icon: mdi:phone-in-talk
           - type: divider
+          - type: weblink
+            name: Grafana
+            url: http://10.2.31.1:32771
+            icon: mdi:graphql
+          - type: divider
 
-      - type: weather-forecast
+
+
+      - id: f6d848b5d54b43f4a67fe37afeda6e35  # Automatically created id
+        type: weather-forecast
         entity: weather.dark_sky
-      
+
+      - id: 7ff685f026c64447b8f1393b995849d4  # Automatically created id
+        type: alarm-panel
+        entity: alarm_control_panel.ha_alarm
 
 
+      - id: 4a0ee9d5f1754b808f7780460f57caa0  # Automatically created id
+        type: thermostat
+        entity: climate.stube_heizung
 
-      - type: vertical-stack
+
+      - id: dc4b7c199fc74c5ea16b57d3100e5e82  # Automatically created id
+        type: vertical-stack
         cards:
 
           - type: picture-entity
@@ -117,7 +135,7 @@ views:
             entity: sensor.zipatile_temperature
             name: Temperatur
             height: 75
-            line_color: "#3498db"
+            line_color: '#3498db'
 
           - type: gauge
             title: Noise
@@ -138,7 +156,8 @@ views:
               red: 85
 
 
-      - type: vertical-stack
+      - id: 6a8a43235bfe439184957ccc82c92bf3  # Automatically created id
+        type: vertical-stack
         cards:
 
           - type: picture-entity
@@ -158,7 +177,8 @@ views:
 
 
 
-      - type: glance
+      - id: 4e4c0deb102c425caf8e616d6537954c  # Automatically created id
+        type: glance
         title: Schlafzimmer
         entities:
           - entity: binary_sensor.dach_schlaf_motion_sensor
@@ -172,7 +192,8 @@ views:
           - entity: climate.schlafzimmer_kuhlung
             name: Kühlung
 
-      - type: glance
+      - id: 192d9dd4f114485e907c94c57895b8cc  # Automatically created id
+        type: glance
         title: Leona
         entities:
           - light.1st_leona_level
@@ -180,7 +201,8 @@ views:
 
 
 
-      - type: picture-glance
+      - id: 71daad5ae6804069b1f19e06646f8b80  # Automatically created id
+        type: picture-glance
         title: Stube
         entities:
           - switch.eg_stube_licht_1_switch
@@ -194,12 +216,14 @@ views:
 
 
     # Specify a tab icon if you want the view tab to be an icon.
-  - icon: mdi:home-assistant
+  - id: 1  # Automatically created id
+    icon: mdi:home-assistant
     # Title of the view. Will be used as the tooltip for tab icon
     title: Testing
     cards:
 
-      - type: picture-elements
+      - id: 9c06fa2d1663402cb2838dc60bd24d21  # Automatically created id
+        type: picture-elements
         image: https://www.home-assistant.io/images/default-social.png
         camera_image: camera.stube
 
@@ -231,13 +255,15 @@ views:
               top: 10%
               left: 10%
 
-      - type: map
+      - id: 87cbffc905064617856f401fcdfe53d4  # Automatically created id
+        type: map
         aspect_ratio: 100%
         default_zoom: 9
         entities:
           - device_tracker.oeusqgsv_marcel
 
-      - type: entities
+      - id: 6923049c3d114457adeffc20ad0966d3  # Automatically created id
+        type: entities
         title: People
         entities:
           - entity: sensor.marcel_to_home

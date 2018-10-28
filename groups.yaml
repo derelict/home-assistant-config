@@ -30,7 +30,9 @@ stairways_light:
         - switch.eg_gang_licht_switch
         - switch.1st_gang_licht_switch
         - switch.dach_gang_licht_switch
-   
+
+
+
 
 ################################################################################################
 # Untergeschoss
@@ -57,11 +59,8 @@ waschkueche:
         - sensor.waschkueche_multisensor_luminance
         - sensor.waschkueche_multisensor_relative_humidity
         - sensor.waschkueche_multisensor_temperature
-        - binary_sensor.waschkueche_floodsensor_sensor
-        - binary_sensor.ug_waschkueche_flood_flood
-        - binary_sensor.ug_waschkueche_flood_sensor
-        - binary_sensor.ug_waschkueche_flood_general
-        - sensor.ug_waschkueche_flood_temperature
+        - binary_sensor.ug_waschkueche_floodsensor_2_flood
+        - sensor.ug_waschkueche_floodsensor_2_temperature
 
 ##########################################################
 # Heizung
@@ -145,6 +144,7 @@ eg:
         - group.terasse
         - group.eg_bad
         - group.kammer
+        - group.netatmo_stube
 
 ##########################################################
 # Stube
@@ -171,18 +171,22 @@ stube:
         - camera.stube
         - media_player.stube
         - media_player.stube_home
-        - sensor.netatmo_innenraum_co2
-        - sensor.netatmo_innenraum_humidity
-        - sensor.netatmo_innenraum_noise
-        - sensor.netatmo_innenraum_pressure
-        - sensor.netatmo_innenraum_temperature
-        - sensor.netatmo_innenraum_wifi
         - input_boolean.eg_stube_tv
         - input_boolean.eg_stube_soundbar
         - image_processing.frontdoor_camera
         - climate.stube_heizung
         - sensor.eg_stube_motion_sensor_temperature
         - sensor.eg_stube_motion_sensor_luminance
+
+netatmo_stube:
+    name: Netatmo Stube
+    entities:
+        - sensor.netatmo_innenraum_co2
+        - sensor.netatmo_innenraum_humidity
+        - sensor.netatmo_innenraum_noise
+        - sensor.netatmo_innenraum_pressure
+        - sensor.netatmo_innenraum_temperature
+        - sensor.netatmo_innenraum_wifi
 
 stube_heater:
     name: Stube Heizung Switches
@@ -218,11 +222,12 @@ shield_01_states:
 kuche:
     name: Küche
     entities:
-        - binary_sensor.eg_kueche_flood_sensor
+        - binary_sensor.eg_kueche_floodsensor_flood
+        - sensor.eg_kueche_floodsensor_temperature
         - switch.eg_kueche_licht_links_switch
         - switch.eg_kueche_licht_rechts_switch
         - binary_sensor.eg_kueche_motion_sensor
-        - sensor.eg_kueche_smoke_sensor_temperature
+        - sensor.eg_kueche_smokesensor_temperature
 
 
 ##########################################################
@@ -463,6 +468,9 @@ dark_sky:
        - sensor.dark_sky_temperature
        - sensor.dark_sky_wind_speed
        - sensor.dark_sky_visibility
+       - sensor.dark_sky_daytime_high_temperature
+       - sensor.dark_sky_overnight_low_temperature
+
             
 ################################################################################################
 # Aussen
@@ -474,9 +482,25 @@ outside:
     entities:
         - switch.out_pool_switch_switch
         - switch.out_pool_switch_switch_2
+        - group.netatmo_aussen
+
+netatmo_aussen:
+    name: Netatmo Aussen
+    entities:
         - sensor.netatmo_aussenraum_temperature
         - sensor.netatmo_aussenraum_humidity
         - sensor.netatmo_aussenraum_radio
         - sensor.netatmo_aussenraum_battery
         
+################################################################################################
+# Weather
+################################################################################################        
+
+weather:
+    name: Wetter
+    view: yes
+    entities:
+        - group.dark_sky
+        - group.netatmo_aussen
+
 

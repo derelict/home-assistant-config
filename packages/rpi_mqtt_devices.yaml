@@ -1,8 +1,96 @@
+
+#          target: mediapc
+
+
+#      - service:  notify.pushover
+#        data:
+#          title: Garage Door
+#          message: The garage door is open.
+#          data:
+#            url: https://home-assistant.io/
+#            url_title: Home Assistant
+#            priority: 2
+#            sound: siren
+#            expire: 3600
+#            retry: 30
+#            timestamp: true
+#            file:
+#              path: /tmp/snapshot_camera_stube.jpg
+
+
+
+notify:
+
+  - name: pushover
+    platform: pushover
+    api_key: !secret pushover_api
+    user_key: !secret pushover_user
+
+  # - name: pushover_emergency_alerts_default
+  #   platform: group
+  #   services:
+  #       - service: pushover
+  #         data:
+  #           title: Garage Door
+  #           message: The garage door is open.
+  #           data:
+  #             url: https://home-assistant.io/
+  #             url_title: Home Assistant
+  #             priority: 2
+  #             sound: siren
+  #             expire: 3600
+  #             retry: 30
+  #             timestamp: true
+  #             file:
+  #               path: /tmp/snapshot_camera_stube.jpg
+
+#script:
+#
+#  pushover_test:
+#    alias: 'Pushover Test'
+#    sequence:
+#      - service: camera.snapshot
+#        data:
+#          entity_id: camera.stube
+#          filename: /tmp/snapshot_camera_stube.jpg
+#
+#      - service:  notify.pushover
+#        data:
+#          title: Garage Door
+#          message: The garage door is open.
+#          data:
+#            url: https://home-assistant.io/
+#            url_title: Home Assistant
+#            priority: 2
+#            sound: siren
+#            expire: 3600
+#            retry: 30
+#            timestamp: true
+#            file:
+#              path: /tmp/snapshot_camera_stube.jpg
+
+#alert:
+#  test_alert:
+#    name: Test Alert Open
+#    done_message: Test Alert Closed
+#    entity_id: input_boolean.test_switch
+#    state: 'on'
+#    repeat: 30
+#    can_acknowledge: True
+#    skip_first: false
+#    notifiers:
+#      - pushover_emergency_alerts_default
+
+
+
 ##############################################################################################################################
 # INPUT BOOLEAN
 ##############################################################################################################################
 
 input_boolean:
+
+  test_switch:
+    name: Test Switch
 
 ###############################################################
 # STUBE
@@ -69,6 +157,121 @@ automation:
         retain: true
         payload: "{\"command\":\"SET_STATE\",\"value\":\"{{ states('input_select.zipatile_siren') }}\"}"
 
+
+
+
+
+
+  - alias: Send Smoke Emergency Notifications
+    trigger:
+      - platform: state
+        entity_id:
+          - binary_sensor.eg_kueche_smokesensor_sensor
+          - input_boolean.test_switch
+        to: 'on'
+    action:
+    - service:  notify.pushover
+      data_template:
+         message: '{{ trigger.from_state.name }} has detected Smoke!'
+      data:
+        title: Smoke Alarm
+        data:
+          priority: 2
+          sound: siren
+          expire: 3600
+          retry: 30
+          timestamp: true
+
+
+  - alias: Send Water Emergency Notifications
+    trigger:
+      - platform: state
+        entity_id:
+          - binary_sensor.eg_kueche_floodsensor_flood
+          - binary_sensor.ug_waschkueche_floodsensor_2_flood
+          - input_boolean.test_switch
+        to: 'on'
+    action:
+    - service:  notify.pushover
+      data_template:
+         message: '{{ trigger.from_state.name }} has detected Water!'
+      data:
+        title: Water Alarm
+        data:
+          priority: 2
+          sound: siren
+          expire: 3600
+          retry: 30
+          timestamp: true
+
+
+
+  - alias: Trigger alarm while armed away
+    trigger:
+      - platform: state
+        entity_id: input_boolean.test_switch
+        to: 'on'
+    condition:
+      - condition: state
+        entity_id: alarm_control_panel.ha_alarm
+        state: armed_away
+    action:
+      service: alarm_control_panel.alarm_trigger
+      entity_id: alarm_control_panel.ha_alarm
+
+
+  - alias: Send Alarm Notifications
+    trigger:
+      - platform: state
+        entity_id: alarm_control_panel.ha_alarm
+        to: 'triggered'
+    action:
+    - service:  notify.pushover
+      data:
+        message: The House Alarm has been triggered
+        title: House Alarm
+        data:
+          priority: 2
+          sound: siren
+          expire: 3600
+          retry: 30
+          timestamp: true
+
+
+
+  - alias: Send Presence Notifications
+
+    trigger:
+      - platform: zone
+        zone: zone.home
+        entity_id: 
+          - device_tracker.oeusqgsv_marcel
+          - device_tracker.oeusqgsv_jeanette
+          
+      - platform: zone
+        zone: zone.marcel_home_large
+        entity_id: 
+          - device_tracker.oeusqgsv_marcel
+          - device_tracker.oeusqgsv_jeanette    
+          
+      - platform: zone
+        zone: zone.marcel_work
+        entity_id: 
+          - device_tracker.oeusqgsv_marcel
+          - device_tracker.oeusqgsv_jeanette    
+          
+      - platform: zone
+        zone: zone.marcel_work_large
+        entity_id: 
+          - device_tracker.oeusqgsv_marcel
+          - device_tracker.oeusqgsv_jeanette    
+  
+    action:
+      - service:  notify.pushover
+        data_template:
+           message: '{{ trigger.from_state.name }} has {{ trigger.event }} the {{ trigger.zone.attributes.friendly_name }} Zone'
+        data:
+          title: Home Presence Detection
 
 ###############################################################
 # STUBE
