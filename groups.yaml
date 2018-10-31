@@ -441,7 +441,19 @@ house_people:
       - proximity.marcel_to_home
       - sensor.marcel_to_home
       - sensor.marcel_to_work
+      - group.house_people_bt_tracking
 
+house_people_bt_tracking:
+    name: Bluetooth Tracking
+    entities:
+        - sensor.marcel_mobile_bt_rp1
+        - sensor.marcel_mobile_bt_stube
+        - sensor.marcel_watch_bt_rp1
+        - sensor.marcel_watch_bt_stube
+        - sensor.marcel_car_bt_rp1
+        - sensor.marcel_car_bt_stube
+        - sensor.marcel_nut_bt_rp1
+        - sensor.marcel_nut_bt_stube
             
 dark_sky:
     name: Dark Sky

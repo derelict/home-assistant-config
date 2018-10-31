@@ -282,7 +282,7 @@ climate:
   - platform: generic_thermostat
     name: Stube Heizung
     heater: group.stube_heater
-    target_sensor: sensor.netatmo_innenraum_temperature
+    target_sensor: sensor.zipatile_temperature
     min_temp: 15
     max_temp: 26
     ac_mode: False
@@ -394,17 +394,55 @@ sensor:
 
 
   - platform: mqtt
-    state_topic: !secret bt_addr_marcel_mobile
+    state_topic: !secret rp1_bt_addr_marcel_mobile
     value_template: '{{ value_json.confidence }}'
     unit_of_measurement: '%'
-    name: 'Marcel Mobile BT Stube'
+    name: 'Marcel Mobile BT RP1'
 
   - platform: mqtt
-    state_topic: !secret bt_addr_marcel_watch
+    state_topic: !secret rp1_bt_addr_marcel_watch
     value_template: '{{ value_json.confidence }}'
     unit_of_measurement: '%'
-    name: 'Marcel Watch BT Stube'
+    name: 'Marcel Watch BT RP1'
 
+  - platform: mqtt
+    state_topic: !secret rp1_ibeacon_marcel_car
+    value_template: '{{ value_json.confidence }}'
+    unit_of_measurement: '%'
+    name: 'Marcel Car BT RP1'
+  
+  - platform: mqtt
+    state_topic: !secret rp1_nut_marcel
+    value_template: '{{ value_json.confidence }}'
+    unit_of_measurement: '%'
+    name: 'Marcel NUT BT RP1'
+  
+
+
+
+  - platform: mqtt
+    state_topic: !secret stube_bt_addr_marcel_mobile
+    value_template: '{{ value_json.confidence }}'
+    unit_of_measurement: '%'
+    name: 'Marcel Mobile BT STUBE'
+
+  - platform: mqtt
+    state_topic: !secret stube_bt_addr_marcel_watch
+    value_template: '{{ value_json.confidence }}'
+    unit_of_measurement: '%'
+    name: 'Marcel Watch BT STUBE'
+
+  - platform: mqtt
+    state_topic: !secret stube_ibeacon_marcel_car
+    value_template: '{{ value_json.confidence }}'
+    unit_of_measurement: '%'
+    name: 'Marcel Car BT STUBE'
+
+  - platform: mqtt
+    state_topic: !secret stube_nut_marcel
+    value_template: '{{ value_json.confidence }}'
+    unit_of_measurement: '%'
+    name: 'Marcel NUT BT STUBE'
 
 
   - platform: yr

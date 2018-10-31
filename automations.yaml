@@ -136,6 +136,7 @@
 
 - alias: Unlock Garage on Presence
   trigger:
+
     - platform: zone
       entity_id: device_tracker.oeusqgsv_marcel
       zone: zone.home
@@ -153,12 +154,24 @@
       entity_id: device_tracker.oeusqgsv_jeanette
       zone: zone.marcel_home_large
       event: enter
+
+    - platform: numeric_state
+      entity_id: 
+        - sensor.marcel_car_bt_rp1
+        - sensor.marcel_car_bt_stube
+      above: 10
+
   
   action:
   - service: lock.unlock
     entity_id: lock.garage_
   - service: homeassistant.turn_on
     entity_id: switch.garage_door
+
+  - service:  notify.pushover
+    data:
+      message: Opening Garage Door
+      title: Presence Automation
 
 
 

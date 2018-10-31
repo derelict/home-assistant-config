@@ -159,7 +159,9 @@ automation:
 
 
 
-
+##############################################################################################################################
+# SENSOR ALARM
+##############################################################################################################################
 
 
   - alias: Send Smoke Emergency Notifications
@@ -204,7 +206,9 @@ automation:
           retry: 30
           timestamp: true
 
-
+##############################################################################################################################
+# ALARM
+##############################################################################################################################
 
   - alias: Trigger alarm while armed away
     trigger:
@@ -226,6 +230,12 @@ automation:
         entity_id: alarm_control_panel.ha_alarm
         to: 'triggered'
     action:
+
+    - service: camera.snapshot
+      data:
+        entity_id: camera.stube
+        filename: /tmp/snapshot_camera_stube.jpg
+
     - service:  notify.pushover
       data:
         message: The House Alarm has been triggered
@@ -236,32 +246,41 @@ automation:
           expire: 3600
           retry: 30
           timestamp: true
+          file:
+            path: /tmp/snapshot_camera_stube.jpg          
 
 
+##############################################################################################################################
+# PRESENCE
+##############################################################################################################################
 
-  - alias: Send Presence Notifications
+  - alias: Send Presence Enter Notifications
 
     trigger:
       - platform: zone
         zone: zone.home
+        event: enter
         entity_id: 
           - device_tracker.oeusqgsv_marcel
           - device_tracker.oeusqgsv_jeanette
           
       - platform: zone
         zone: zone.marcel_home_large
+        event: enter
         entity_id: 
           - device_tracker.oeusqgsv_marcel
           - device_tracker.oeusqgsv_jeanette    
           
       - platform: zone
         zone: zone.marcel_work
+        event: enter
         entity_id: 
           - device_tracker.oeusqgsv_marcel
           - device_tracker.oeusqgsv_jeanette    
           
       - platform: zone
         zone: zone.marcel_work_large
+        event: enter
         entity_id: 
           - device_tracker.oeusqgsv_marcel
           - device_tracker.oeusqgsv_jeanette    
@@ -269,9 +288,71 @@ automation:
     action:
       - service:  notify.pushover
         data_template:
-           message: '{{ trigger.from_state.name }} has {{ trigger.event }} the {{ trigger.zone.attributes.friendly_name }} Zone'
+           message: '{{ trigger.from_state.name }} has entered the {{ trigger.zone.attributes.friendly_name }} Zone'
         data:
           title: Home Presence Detection
+
+  - alias: Send Presence Leave Notifications
+
+    trigger:
+      - platform: zone
+        zone: zone.home
+        event: leave
+        entity_id: 
+          - device_tracker.oeusqgsv_marcel
+          - device_tracker.oeusqgsv_jeanette
+          
+      - platform: zone
+        zone: zone.marcel_home_large
+        event: leave
+        entity_id: 
+          - device_tracker.oeusqgsv_marcel
+          - device_tracker.oeusqgsv_jeanette    
+          
+      - platform: zone
+        zone: zone.marcel_work
+        event: leave
+        entity_id: 
+          - device_tracker.oeusqgsv_marcel
+          - device_tracker.oeusqgsv_jeanette    
+          
+      - platform: zone
+        zone: zone.marcel_work_large
+        event: leave
+        entity_id: 
+          - device_tracker.oeusqgsv_marcel
+          - device_tracker.oeusqgsv_jeanette    
+  
+    action:
+      - service:  notify.pushover
+        data_template:
+           message: '{{ trigger.from_state.name }} has left the {{ trigger.zone.attributes.friendly_name }} Zone'
+        data:
+          title: Home Presence Detection          
+
+
+
+  - alias: Send Presence iBeacon Notifications
+
+    trigger:
+      - platform: numeric_state
+        entity_id: 
+          - sensor.marcel_mobile_bt_rp1
+          - sensor.marcel_watch_bt_rp1
+          - sensor.marcel_car_bt_rp1
+          - sensor.marcel_mobile_bt_stube
+          - sensor.marcel_watch_bt_stube
+          - sensor.marcel_car_bt_stube
+          - sensor.marcel_nut_bt_rp1
+          - sensor.marcel_nut_bt_stube
+        above: 10
+    action:
+      - service:  notify.pushover
+        data_template:
+           message: '{{ trigger.from_state.name }} iBeacon Detected'
+        data:
+          title: iBeacon Detection  
+
 
 ###############################################################
 # STUBE
