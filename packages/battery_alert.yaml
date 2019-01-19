@@ -118,6 +118,28 @@
 ##   - Fixed issue where non-battery sensors with Battery in their name are
 ##     added to group.battery_status
 ##
+## 1.1.3 (2018-11-17)
+##   Fixed
+##   - Filter out trigger=none from automation.battery_sensor_from_attributes
+##   - Don't convert float to int in mqtt payload
+##
+## 1.1.4 (2018-11-17)
+##   Fixed
+##   - Ignore entities with null states
+##   - Fix issue causing TypeError: object of type 'NoneType' has no len()
+##
+## 1.1.5 (2018-11-18)
+##   Added
+##   - Add support for defining battery_template_string attibute to
+##     support templates that return strings
+##
+## 1.1.6 (2018-11-21)
+##   Removed
+##   - Removed attribute named attribute on the sensors
+##   Added
+##   - Added attribute to the MQTT sensors with the same name and value as the
+##     original entity
+##
 ################################################################
 
 ################################################################
@@ -173,10 +195,9 @@
 ##         sensor.sensor_with_battery_attibute:
 ##           battery_sensor_creation_disabled: true
 ##
-## 10. If a battery attribute requires a template to convert it into a usable percent
-##     or string, use customize to add `battery_template` with the necessary template.
-##     The template should result in either a percentage or a string ("Low" will
-##     trigger low battery notification).
+## 10. If a battery attribute requires a template to convert it into a usable percent, use customize
+##     to add `battery_template` with the necessary template. The template result must be a number
+##     that represents a percentage.
 ##
 ##     This example will create a battery sensor with the value of battery_level * 2
 ##
@@ -185,13 +206,17 @@
 ##         sensor.sensor_with_battery_attibute_template:
 ##           battery_template: "{{ value_json.value | int * 2 }}"
 ##
+## 11. If a battery attribute requires a template to convert it into a string, use customize to add
+##     `battery_template_string` with the necessary template. The template result must be a string.
+##     For example, "Low" will trigger low battery notification).
+##
 ##     This example will create a battery sensor that contains "Low" if battery_level
 ##     is less than 2
 ##
 ##     homeassistant:
 ##       customize:
 ##         sensor.sensor_with_battery_attibute_template:
-##           battery_template: >-
+##           battery_template_string: >-
 ##             {%- if value < 2 -%}
 ##             "Low"
 ##             {%- else -%}
@@ -349,6 +374,7 @@ automation:
         {% macro battery_level() %}
         {% for entity_id in states.group.battery_status.attributes.entity_id if (
           not is_state_attr(entity_id, 'battery_alert_disabled', true)
+          and states(entity_id) is not none
           and (
             (
               (
@@ -375,6 +401,7 @@ automation:
           {% macro battery_level() %}
           {% for entity_id in states.group.battery_status.attributes.entity_id if (
             not is_state_attr(entity_id, 'battery_alert_disabled', true)
+            and states(entity_id) is not none
             and (
               (
                 (
@@ -410,6 +437,7 @@ automation:
         {% macro battery_level() %}
         {% for entity_id in states.group.battery_status.attributes.entity_id if (
           not is_state_attr(entity_id, 'battery_alert_disabled', true)
+          and states(entity_id) is not none
           and (
             (
               (
@@ -500,6 +528,8 @@ automation:
       event_type: state_changed
   condition:
     - condition: template
+      value_template: "{{ trigger is not none }}"
+    - condition: template
       value_template: "{{ trigger.event.data is not none }}"
     - condition: template
       value_template: "{{ trigger.event.data.old_state is not none }}"
@@ -528,19 +558,31 @@ automation:
         retain: true
         payload: &config_payload >-
           {
-            "device_class": "battery",
+            {% if trigger.event.data.new_state.attributes.battery_level is defined -%}
+              {%- set attribname = 'battery_level' -%}
+            {%- elif trigger.event.data.new_state.attributes.battery is defined -%}
+              {%- set attribname = 'battery' -%}
+            {%- elif trigger.event.data.new_state.attributes['Battery numeric'] is defined -%}
+              {%- set attribname = 'Battery numeric' -%}
+            {%- endif -%}
             "name": "{{ trigger.event.data.new_state.name }} Battery",
             "state_topic": "homeassistant/sensor/{{ trigger.event.data.entity_id.split('.')[1] }}_battery/state",
-            "unit_of_measurement": "%",
             {% if trigger.event.data.new_state.attributes.battery_template is defined -%}
             "value_template": "{{ trigger.event.data.new_state.attributes.battery_template }}",
+            "unit_of_measurement": "%",
+            "device_class": "battery",
+            {% elif trigger.event.data.new_state.attributes.battery_template_string is defined -%}
+            "value_template": "{{ trigger.event.data.new_state.attributes.battery_template_string }}",
+            "icon": "mdi:battery",
             {% else -%}
             "value_template": "{{ "{{" }} value_json.value | int {{ "}}" }}",
+            "unit_of_measurement": "%",
+            "device_class": "battery",
             {% endif -%}
             "unique_id": "{{ trigger.event.data.entity_id.split('.')[1] }}_battery",
             "json_attributes": [
               "entity_id",
-              "attribute",
+              "{{ attribname }}",
               "mqtt_config_topic",
               "mqtt_state_topic"
             ]
@@ -552,31 +594,29 @@ automation:
         payload: >-
           {
             {% if trigger.event.data.new_state.attributes.battery_level is defined -%}
-              {%- set attrib = trigger.event.data.new_state.attributes.battery_level -%}
+              {%- set attribval = trigger.event.data.new_state.attributes.battery_level -%}
+              {%- set attribname = 'battery_level' -%}
             {%- elif trigger.event.data.new_state.attributes.battery is defined -%}
-              {%- set attrib = trigger.event.data.new_state.attributes.battery -%}
+              {%- set attribval = trigger.event.data.new_state.attributes.battery -%}
+              {%- set attribname = 'battery' -%}
             {%- elif trigger.event.data.new_state.attributes['Battery numeric'] is defined -%}
-              {%- set attrib = (trigger.event.data.new_state.attributes['Battery numeric'] | int + 1) * 10 -%}
-            {%- else -%}
-              {%- set attrib = "unknown" -%}
+              {%- set attribval = (trigger.event.data.new_state.attributes['Battery numeric'] | int + 1) * 10 -%}
+              {%- set attribname = 'Battery numeric' -%}
             {%- endif -%}
-            "value": {%- if attrib is number
-                or attrib | length == attrib | int | string | length
-                or attrib | length == attrib | float | string | length
-            -%}
-              {{ attrib | int }}
+            "value": {%- if attribval | int == attribval -%}
+              {{ attribval }}
+            {%- elif attribval | float == attribval -%}
+              {{ attribval }}
+            {%- elif attribval | length == attribval | float | string | length -%}
+              {{ attribval | float }}
+            {%- elif attribval | length == attribval | int | string | length -%}
+              {{ attribval | int }}
             {%- else -%}
-              "{{ attrib }}"
+              "{{ attribval }}"
             {%- endif %},
             "entity_id": "{{ trigger.event.data.entity_id }}",
-            {% if trigger.event.data.new_state.attributes.battery_level is defined -%}
-            "attribute": "battery_level",
-            {%- elif trigger.event.data.new_state.attributes.battery is defined -%}
-            "attribute": "battery",
-            {%- elif trigger.event.data.new_state.attributes['Battery numeric'] is defined -%}
-            "attribute": "Battery numeric",
-            {%- else -%}
-            "attribute": "unknown",
+            {% if attribname is defined -%}
+            "{{ attribname }}": "{{ attribval }}",
             {%- endif %}
             "mqtt_config_topic": "homeassistant/sensor/{{ trigger.event.data.entity_id.split('.')[1] }}_battery/config",
             "mqtt_state_topic": "homeassistant/sensor/{{ trigger.event.data.entity_id.split('.')[1] }}_battery/state"

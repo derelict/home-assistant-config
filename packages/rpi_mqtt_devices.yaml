@@ -265,7 +265,7 @@ automation:
           - device_tracker.oeusqgsv_jeanette
           
       - platform: zone
-        zone: zone.marcel_home_large
+        zone: zone.home_large
         event: enter
         entity_id: 
           - device_tracker.oeusqgsv_marcel
@@ -291,6 +291,12 @@ automation:
            message: '{{ trigger.from_state.name }} has entered the {{ trigger.zone.attributes.friendly_name }} Zone'
         data:
           title: Home Presence Detection
+      
+      - service:  notify.slack
+        data_template:
+           message: '{{ trigger.from_state.name }} has entered the {{ trigger.zone.attributes.friendly_name }} Zone'
+        data:
+          title: Home Presence Detection
 
   - alias: Send Presence Leave Notifications
 
@@ -302,12 +308,12 @@ automation:
           - device_tracker.oeusqgsv_marcel
           - device_tracker.oeusqgsv_jeanette
           
-      - platform: zone
-        zone: zone.marcel_home_large
-        event: leave
-        entity_id: 
-          - device_tracker.oeusqgsv_marcel
-          - device_tracker.oeusqgsv_jeanette    
+#      - platform: zone
+#        zone: zone.home_large
+#        event: leave
+#        entity_id: 
+#          - device_tracker.oeusqgsv_marcel
+#          - device_tracker.oeusqgsv_jeanette    
           
       - platform: zone
         zone: zone.marcel_work
@@ -316,12 +322,12 @@ automation:
           - device_tracker.oeusqgsv_marcel
           - device_tracker.oeusqgsv_jeanette    
           
-      - platform: zone
-        zone: zone.marcel_work_large
-        event: leave
-        entity_id: 
-          - device_tracker.oeusqgsv_marcel
-          - device_tracker.oeusqgsv_jeanette    
+#      - platform: zone
+#        zone: zone.marcel_work_large
+#        event: leave
+#        entity_id: 
+#          - device_tracker.oeusqgsv_marcel
+#          - device_tracker.oeusqgsv_jeanette    
   
     action:
       - service:  notify.pushover
@@ -329,7 +335,11 @@ automation:
            message: '{{ trigger.from_state.name }} has left the {{ trigger.zone.attributes.friendly_name }} Zone'
         data:
           title: Home Presence Detection          
-
+      - service:  notify.slack
+        data_template:
+           message: '{{ trigger.from_state.name }} has left the {{ trigger.zone.attributes.friendly_name }} Zone'
+        data:
+          title: Home Presence Detection     
 
 
   - alias: Send Presence iBeacon Notifications
@@ -337,11 +347,11 @@ automation:
     trigger:
       - platform: numeric_state
         entity_id: 
-          - sensor.marcel_mobile_bt_rp1
           - sensor.marcel_watch_bt_rp1
-          - sensor.marcel_car_bt_rp1
-          - sensor.marcel_mobile_bt_stube
           - sensor.marcel_watch_bt_stube
+          - sensor.marcel_mobile_bt_rp1
+          - sensor.marcel_mobile_bt_stube
+          - sensor.marcel_car_bt_rp1
           - sensor.marcel_car_bt_stube
           - sensor.marcel_nut_bt_rp1
           - sensor.marcel_nut_bt_stube
@@ -349,10 +359,15 @@ automation:
     action:
       - service:  notify.pushover
         data_template:
-           message: '{{ trigger.from_state.name }} iBeacon Detected'
+           message: '{{ trigger.from_state.name }} Detected'
         data:
-          title: iBeacon Detection  
+          title: Bluetooth Detection  
 
+      - service:  notify.slack
+        data_template:
+           message: '{{ trigger.from_state.name }} Detected'
+        data:
+          title: Bluetooth Detection  
 
 ###############################################################
 # STUBE

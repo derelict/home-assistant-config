@@ -9,9 +9,9 @@
   radius: 250
   icon: mdi:briefcase
 
-- name: Marcel Home Large
-  latitude: !secret marcel_home_large_lat
-  longitude: !secret marcel_home_large_lon
+- name: Home Large
+  latitude: !secret home_large_lat
+  longitude: !secret home_large_lon
   radius: 250
   icon: mdi:home
     

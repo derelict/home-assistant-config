@@ -419,7 +419,7 @@ script:
 
       - service: media_player.volume_set
         data_template:
-          entity_id: media_player.schlafzimmer_home
+          entity_id: media_player.schlafzimmer_speaker
           volume_level: '{{ states.input_number.test_volume.state|float }}'
 
       - delay: '00:00:{{states.sensor.wakeup_vol_increase_count.state|int}}'
@@ -504,12 +504,12 @@ script:
 
       - service: media_player.volume_set
         data_template:
-          entity_id: media_player.schlafzimmer_home
+          entity_id: media_player.schlafzimmer_speaker
           volume_level: '{{ states.input_number.test_volume.state|float }}'
 
       - service: media_player.play_media
         data_template:
-          entity_id: media_player.schlafzimmer_home
+          entity_id: media_player.schlafzimmer_speaker
           media_content_id: >
             {% if is_state("input_select.radio_wakeup", "Radio FM1") %} http://radiofm1.ice.infomaniak.ch/radiofm1-128.mp3
             {% elif is_state("input_select.radio_wakeup", "DI.fm Vocal Trance") %} http://prem2.di.fm:80/vocaltrance?e5610542b1780e1

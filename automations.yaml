@@ -55,8 +55,10 @@
           - binary_sensor.dach_gang_motion_sensor
           - binary_sensor.1st_gang_neo_motion_sensor
           - binary_sensor.dach_schlaf_motion_sensor
-          - binary_sensor.dach_bad_motion_sensor
-          - binary_sensor.ug_gang_motion_sensor
+          - binary_sensor.dach_bad_neo_sensor_motion
+          - binary_sensor.ug_gang_sensor_motion
+          - binary_sensor.1st_leona_neo_sensor
+          - binary_sensor.1st_jason_neo_sensor
         to: 'on'      
   action:
       - service: mqtt.publish
@@ -72,8 +74,10 @@
           - binary_sensor.dach_gang_motion_sensor
           - binary_sensor.1st_gang_neo_motion_sensor
           - binary_sensor.dach_schlaf_motion_sensor
-          - binary_sensor.dach_bad_motion_sensor
-          - binary_sensor.ug_gang_motion_sensor
+          - binary_sensor.dach_bad_neo_sensor_motion
+          - binary_sensor.ug_gang_sensor_motion
+          - binary_sensor.1st_leona_neo_sensor
+          - binary_sensor.1st_jason_neo_sensor
         to: 'off'      
   action:
       - service: mqtt.publish
@@ -118,7 +122,7 @@
   - service: homeassistant.turn_on
     entity_id: switch.heizung_licht_switch
   - service: lock.unlock
-    entity_id: lock.garage_
+    entity_id: lock.garage
 
 - alias: Turn off Heizung light after last movement
   trigger:
@@ -131,7 +135,7 @@
   - service: homeassistant.turn_off
     entity_id: switch.heizung_licht_switch
   - service: lock.lock
-    entity_id: lock.garage_
+    entity_id: lock.garage
 
 
 - alias: Unlock Garage on Presence
@@ -155,16 +159,16 @@
       zone: zone.marcel_home_large
       event: enter
 
-    - platform: numeric_state
-      entity_id: 
-        - sensor.marcel_car_bt_rp1
-        - sensor.marcel_car_bt_stube
-      above: 10
+    #- platform: numeric_state
+    #  entity_id: 
+    #    - sensor.marcel_car_bt_rp1
+    #    - sensor.marcel_car_bt_stube
+    #  above: 10
 
   
   action:
   - service: lock.unlock
-    entity_id: lock.garage_
+    entity_id: lock.garage
   - service: homeassistant.turn_on
     entity_id: switch.garage_door
 
@@ -173,18 +177,21 @@
       message: Opening Garage Door
       title: Presence Automation
 
-
+  - service:  notify.slack
+    data:
+      message: Opening Garage Door
+      title: Presence Automation
 
 - alias: Re-Lock After unlock
   trigger:
     platform: state
-    entity_id: lock.garage_
+    entity_id: lock.garage
     to: 'unlocked'
     for:
       minutes: 10
   action:
   - service: lock.lock
-    entity_id: lock.garage_
+    entity_id: lock.garage
 
 
 ###################################################################
@@ -285,7 +292,7 @@
 - alias: Turn Werkstatt System ON
   trigger:
       - platform: state
-        entity_id: binary_sensor.werkstatt_motion_sensor_sensor
+        entity_id: binary_sensor.ug_werkstatt_motion_sensor
         to: 'on'
       - platform: state
         entity_id: switch.werkstatt_decken_licht_switch
@@ -293,10 +300,18 @@
       - platform: state
         entity_id: binary_sensor.pc_idle_state
         to: 'on'
-  condition:
-    condition: state
-    entity_id: binary_sensor.pc_video_app_state
-    state: 'off'
+  condition: 
+    condition: and
+    conditions:
+      - condition: state
+        entity_id: binary_sensor.pc_video_app_state
+        state: 'off'
+      - condition: state
+        entity_id: input_boolean.pc_power
+        state: 'off'
+      - condition: state
+        entity_id: switch.pc_default_music
+        state: 'off'        
   action:
        - service: homeassistant.turn_on
          entity_id: switch.werkstatt_decken_licht_switch
@@ -312,7 +327,7 @@
 - alias: Turn Werkstatt System OFF
   trigger:
       - platform: state
-        entity_id: binary_sensor.werkstatt_motion_sensor_sensor
+        entity_id: binary_sensor.ug_werkstatt_motion_sensor
         to: 'off'
       - platform: state
         entity_id: switch.werkstatt_decken_licht_switch
@@ -324,7 +339,7 @@
     condition: and
     conditions:
       - condition: state
-        entity_id: binary_sensor.werkstatt_motion_sensor_sensor
+        entity_id: binary_sensor.ug_werkstatt_motion_sensor
         state: 'off'
       - condition: state
         entity_id: binary_sensor.pc_idle_state
@@ -416,10 +431,10 @@
 - alias: turn UG light on
   trigger:
       - platform: state
-        entity_id: binary_sensor.ug_gang_motion_sensor
+        entity_id: binary_sensor.ug_gang_sensor_motion
         to: 'on'
       - platform: state
-        entity_id: binary_sensor.eg_gang_motion_sensor
+        entity_id: binary_sensor.eg_gang_motion_3_sensor
         to: 'on'
       - platform: state
         entity_id: binary_sensor.heizung_multisensor_sensor
@@ -431,10 +446,10 @@
 - alias: turn UG light off
   trigger:
       - platform: state
-        entity_id: binary_sensor.ug_gang_motion_sensor
+        entity_id: binary_sensor.ug_gang_sensor_motion
         to: 'off'
       - platform: state
-        entity_id: binary_sensor.eg_gang_motion_sensor
+        entity_id: binary_sensor.eg_gang_motion_3_sensor
         to: 'off'
       - platform: state
         entity_id: binary_sensor.heizung_multisensor_sensor
@@ -444,10 +459,10 @@
     condition: and
     conditions:
       - condition: state
-        entity_id: binary_sensor.ug_gang_motion_sensor
+        entity_id: binary_sensor.ug_gang_sensor_motion
         state: 'off'
       - condition: state
-        entity_id: binary_sensor.eg_gang_motion_sensor
+        entity_id: binary_sensor.eg_gang_motion_3_sensor
         state: 'off'
       - condition: state
         entity_id: binary_sensor.heizung_multisensor_sensor
@@ -463,10 +478,10 @@
 - alias: turn EG light on
   trigger:
       - platform: state
-        entity_id: binary_sensor.ug_gang_motion_sensor
+        entity_id: binary_sensor.ug_gang_sensor_motion
         to: 'on'
       - platform: state
-        entity_id: binary_sensor.eg_gang_motion_sensor
+        entity_id: binary_sensor.eg_gang_motion_3_sensor
         to: 'on'
       - platform: state
         entity_id: binary_sensor.1st_gang_neo_motion_sensor
@@ -478,10 +493,10 @@
 - alias: turn EG light off
   trigger:
       - platform: state
-        entity_id: binary_sensor.ug_gang_motion_sensor
+        entity_id: binary_sensor.ug_gang_sensor_motion
         to: 'off'
       - platform: state
-        entity_id: binary_sensor.eg_gang_motion_sensor
+        entity_id: binary_sensor.eg_gang_motion_3_sensor
         to: 'off'
       - platform: state
         entity_id: binary_sensor.1st_gang_neo_motion_sensor
@@ -491,10 +506,10 @@
     condition: and
     conditions:
       - condition: state
-        entity_id: binary_sensor.ug_gang_motion_sensor
+        entity_id: binary_sensor.ug_gang_sensor_motion
         state: 'off'
       - condition: state
-        entity_id: binary_sensor.eg_gang_motion_sensor
+        entity_id: binary_sensor.eg_gang_motion_3_sensor
         state: 'off'
       - condition: state
         entity_id: binary_sensor.1st_gang_neo_motion_sensor
@@ -625,7 +640,7 @@
       - platform: state
         entity_id: 
           - binary_sensor.dach_gang_motion_sensor
-          - binary_sensor.eg_gang_motion_sensor
+          - binary_sensor.eg_gang_motion_3_sensor
           - binary_sensor.1st_gang_neo_motion_sensor
         to: 'on'
   action:
@@ -637,7 +652,7 @@
       - platform: state
         entity_id: 
           - binary_sensor.dach_gang_motion_sensor
-          - binary_sensor.eg_gang_motion_sensor
+          - binary_sensor.eg_gang_motion_3_sensor
           - binary_sensor.1st_gang_neo_motion_sensor
         to: 'off'
         for:
@@ -649,7 +664,7 @@
         entity_id: binary_sensor.dach_gang_motion_sensor
         state: 'off'
       - condition: state
-        entity_id: binary_sensor.eg_gang_motion_sensor
+        entity_id: binary_sensor.eg_gang_motion_3_sensor
         state: 'off'
       - condition: state
         entity_id: binary_sensor.1st_gang_neo_motion_sensor
@@ -792,12 +807,12 @@
   action:
     - service: media_player.volume_set
       data:
-        entity_id: media_player.badzimmer_home
+        entity_id: media_player.badezimmer_speaker
         volume_level: '0.3'
 
     - service: media_player.play_media
       data_template:
-        entity_id: media_player.badzimmer_home
+        entity_id: media_player.badezimmer_speaker
         media_content_id: >
           {% if is_state("input_select.radio_station_schlafbad", "Radio FM1") %} http://radiofm1.ice.infomaniak.ch/radiofm1-128.mp3
           {% elif is_state("input_select.radio_station_schlafbad", "DI.fm Vocal Trance") %} http://prem2.di.fm:80/vocaltrance?e5610542b1780e1
@@ -820,7 +835,7 @@
   action:
     - service: media_player.volume_set
       data:
-        entity_id: media_player.badzimmer_home
+        entity_id: media_player.badezimmer_speaker
         volume_level: '0.5'
 
 
@@ -835,14 +850,14 @@
   action:
     - service: media_player.media_stop
       data:
-        entity_id: media_player.badzimmer_home        
+        entity_id: media_player.badezimmer_speaker       
 
 
 - alias: turn dach bad light 1 on
   trigger:
       - platform: state
         entity_id: 
-          - binary_sensor.dach_bad_motion_sensor
+          - binary_sensor.dach_bad_neo_sensor_motion
         to: 'on'  
   action:
     - service: homeassistant.turn_on
@@ -853,7 +868,7 @@
   trigger:
       - platform: state
         entity_id: 
-          - binary_sensor.dach_bad_motion_sensor
+          - binary_sensor.dach_bad_neo_sensor_motion
         to: 'on'  
   condition:
     condition: time
@@ -868,7 +883,7 @@
   trigger:
       - platform: state
         entity_id:
-          - binary_sensor.dach_bad_motion_sensor
+          - binary_sensor.dach_bad_neo_sensor_motion
         to: 'off'
         for:
           minutes: 10
@@ -890,7 +905,7 @@
   trigger:
       - platform: state
         entity_id: 
-          - binary_sensor.dach_kleider_motion_sensor
+          - binary_sensor.dach_kleider_motion_2_sensor
         to: 'on'  
   action:
     - service: homeassistant.turn_on
@@ -901,7 +916,7 @@
   trigger:
       - platform: state
         entity_id:
-          - binary_sensor.dach_kleider_motion_sensor
+          - binary_sensor.dach_kleider_motion_2_sensor
         to: 'off'
         for:
           minutes: 3
@@ -921,7 +936,7 @@
 - alias: Turn on Kammer light when there is movement
   trigger:
     platform: state
-    entity_id: binary_sensor.eg_kammer_motion_sensor
+    entity_id: binary_sensor.eg_kammer_motion_2_sensor
     to: 'on'
   action:
     service: homeassistant.turn_on
@@ -930,7 +945,7 @@
 - alias: Turn off Kammer light after last movement
   trigger:
     platform: state
-    entity_id: binary_sensor.eg_kammer_motion_sensor
+    entity_id: binary_sensor.eg_kammer_motion_2_sensor
     to: 'off'
     for:
       minutes: 3
@@ -945,7 +960,7 @@
 - alias: Turn on Bad light when there is movement
   trigger:
     platform: state
-    entity_id: binary_sensor.eg_bad_motion_sensor
+    entity_id: binary_sensor.eg_bad_motion_2_sensor
     to: 'on'
   action:
     service: homeassistant.turn_on
@@ -954,7 +969,7 @@
 - alias: Turn off Bad light after last movement
   trigger:
     platform: state
-    entity_id: binary_sensor.eg_bad_motion_sensor
+    entity_id: binary_sensor.eg_bad_motion_2_sensor
     to: 'off'
     for:
       minutes: 10
@@ -1038,7 +1053,7 @@
 - alias: turn kueche light on
   trigger:
       - platform: state
-        entity_id: binary_sensor.eg_kueche_motion_sensor
+        entity_id: binary_sensor.eg_kueche_motion_2_sensor
         to: 'on'
   action:
       - service: homeassistant.turn_on
@@ -1052,7 +1067,7 @@
 - alias: turn kueche light off
   trigger:
       - platform: state
-        entity_id: binary_sensor.eg_kueche_motion_sensor
+        entity_id: binary_sensor.eg_kueche_motion_2_sensor
         to: 'off'
         for:
           minutes: 5
@@ -1067,44 +1082,58 @@
 
 
 ##########################################
-# Pool Steuerung
+# Pool Steuerung / Aussen Licht
 ##########################################  
 
 # HT: Montag - Freitag 07.00 - 19.00
 # switch.out_pool_switch_switch_2 -> Pool Pumpe
 
-- alias: Pool und Chlor Pumpe An
+- alias: Aussen Licht Plug An
   trigger:
-    - platform: time
-      at: '19:00:00'
+    - platform: sun
+      event: sunset
   action:
     - service: homeassistant.turn_on
       entity_id:
-        - switch.out_pool_switch_switch
         - switch.out_pool_switch_switch_2
+        - switch.out_pool_switch_switch
 
-- alias: Pool und Chlor Pumpe Aus
+- alias: Aussen Licht Plug Aus
   trigger:
+#    - platform: sun
+#      event: sunrise
     - platform: time
       at: '01:00:00'
-    - platform: state
-      entity_id: switch.out_pool_switch_switch_2
-      to: 'off'
-
   action:
     - service: homeassistant.turn_off
       entity_id:
         - switch.out_pool_switch_switch_2
         - switch.out_pool_switch_switch
 
-#- alias: Pool Pumpe An
+#- alias: Pool und Chlor Pumpe An
 #  trigger:
 #    - platform: time
-#      at: '21:30:00'
+#      at: '19:00:00'
 #  action:
-#    -service: homeassistant.turn_on
-#    entity_id:
-#      - switch.out_pool_switch_switch_2
+#    - service: homeassistant.turn_on
+#      entity_id:
+#        - switch.out_pool_switch_switch
+#        - switch.out_pool_switch_switch_2
+#
+#- alias: Pool und Chlor Pumpe Aus
+#  trigger:
+#    - platform: time
+#      at: '01:00:00'
+#    - platform: state
+#      entity_id: switch.out_pool_switch_switch_2
+#      to: 'off'
+#
+#  action:
+#    - service: homeassistant.turn_off
+#      entity_id:
+#        - switch.out_pool_switch_switch_2
+#        - switch.out_pool_switch_switch
+
 
 
 ################################################################################################

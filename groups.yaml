@@ -12,14 +12,16 @@ stairways:
 stairways_motion:
     name: Motion Sensors
     entities:
-        - binary_sensor.ug_gang_motion_sensor
-        - binary_sensor.eg_gang_motion_sensor
+        - binary_sensor.ug_gang_sensor_motion
+        - binary_sensor.eg_gang_motion_3_sensor
         - binary_sensor.1st_gang_neo_motion_sensor
         - binary_sensor.dach_gang_motion_sensor
-        - sensor.eg_gang_temperature
+        - sensor.ug_gang_sensor_temperature
+        - sensor.eg_gang_motion_3_temperature
         - sensor.1st_gang_neo_motion_sensor_temperature
         - sensor.dach_gang_motion_sensor_temperature
-        - sensor.eg_gang_luminance
+        - sensor.ug_gang_sensor_luminance
+        - sensor.eg_gang_motion_3_luminance
         - sensor.1st_gang_neo_motion_sensor_luminance
         - sensor.dach_gang_motion_sensor_luminance
         
@@ -60,6 +62,7 @@ waschkueche:
         - sensor.waschkueche_multisensor_relative_humidity
         - sensor.waschkueche_multisensor_temperature
         - binary_sensor.ug_waschkueche_floodsensor_2_flood
+        - binary_sensor.ug_waschkueche_floodsensor_2_sensor
         - sensor.ug_waschkueche_floodsensor_2_temperature
 
 ##########################################################
@@ -71,7 +74,7 @@ heizung:
     entities:
         - binary_sensor.heizung_multisensor_sensor
         - switch.heizung_licht_switch
-        - lock.garage_
+        - lock.garage
         - switch.garage_door
         - sensor.heizung_multisensor_luminance
         - sensor.heizung_multisensor_relative_humidity
@@ -85,7 +88,6 @@ salon:
     name: Salon
     entities:
         - binary_sensor.salon_multisensor_sensor
-        - media_player.jason_home
         - switch.salon_licht_decke_switch
         - switch.salon_licht_spiegel_switch
         - sensor.salon_multisensor_luminance
@@ -99,6 +101,9 @@ salon:
 werkstatt:
     name: Werkstatt
     entities:
+        - binary_sensor.ug_werkstatt_motion_sensor
+        - sensor.ug_werkstatt_motion_sensor_luminance
+        - sensor.ug_werkstatt_motion_sensor_temperature
         - media_player.spotify 
         - group.mediapc_state
         - group.werkstatt_lights
@@ -107,7 +112,6 @@ werkstatt:
 mediapc_state:
     name: Workstation State
     entities:
-        - binary_sensor.werkstatt_motion_sensor_sensor
         - input_boolean.pc_power
         - binary_sensor.pc_idle_state
         - binary_sensor.pc_video_app_state
@@ -129,6 +133,8 @@ werkstatt_lipo_charger:
     entities:
         - switch.werkstatt_charger_switch_switch
         - sensor.werkstatt_charger_switch_power
+        - sensor.werkstatt_charger_switch_power_2
+        - sensor.werkstatt_charger_switch_energy
         - input_boolean.werstatt_charger_active
 
 ################################################################################################
@@ -170,13 +176,15 @@ stube:
         - input_select.zipatile_siren
         - camera.stube
         - media_player.stube
-        - media_player.stube_home
+        - media_player.stube_speaker
         - input_boolean.eg_stube_tv
         - input_boolean.eg_stube_soundbar
         - image_processing.frontdoor_camera
         - climate.stube_heizung
         - sensor.eg_stube_motion_sensor_temperature
         - sensor.eg_stube_motion_sensor_luminance
+        - automation.turn_stube_light_on
+        - automation.turn_kueche_light_on
 
 netatmo_stube:
     name: Netatmo Stube
@@ -223,11 +231,15 @@ kuche:
     name: Küche
     entities:
         - binary_sensor.eg_kueche_floodsensor_flood
+        - binary_sensor.eg_kueche_floodsensor_sensor
         - sensor.eg_kueche_floodsensor_temperature
         - switch.eg_kueche_licht_links_switch
         - switch.eg_kueche_licht_rechts_switch
-        - binary_sensor.eg_kueche_motion_sensor
+        - binary_sensor.eg_kueche_motion_2_sensor
+        - sensor.eg_kueche_motion_2_luminance
+        - sensor.eg_kueche_motion_2_temperature
         - sensor.eg_kueche_smokesensor_temperature
+        - binary_sensor.eg_kueche_smokesensor_sensor
 
 
 ##########################################################
@@ -246,7 +258,9 @@ terasse:
 eg_bad:
     name: Bad
     entities:
-        - binary_sensor.eg_bad_motion_sensor
+        - binary_sensor.eg_bad_motion_2_sensor
+        - sensor.eg_bad_motion_2_sensor_luminance
+        - sensor.eg_bad_motion_2_sensor_temperature
         - switch.eg_bad_licht_switch
 
 ##########################################################
@@ -256,7 +270,10 @@ eg_bad:
 kammer:
     name: Kammer
     entities:
-        - binary_sensor.eg_kammer_motion_sensor
+        - binary_sensor.eg_kammer_motion_2_sensor
+        - sensor.eg_kammer_motion_2_luminance
+        - sensor.eg_kammer_motion_2_sensor_direction
+        - sensor.eg_kammer_motion_2_temperature
         - switch.eg_kammer_licht_switch
 
 
@@ -286,10 +303,11 @@ mediaroom:
         - sensor.1st_media_motion_temperature
         - light.1st_mediaroom_licht_level
         - media_player.mediazimmer
-        - media_player.mediazimmer_home
+        - media_player.mediazimmer_speaker
         - media_player.mediaroom_avr_player
         - input_boolean.1st_mediaroom_beamer
         - group.shield_02_states
+        - media_player.mediaroom_avr_player
 
 shield_02_states:
         name: Mediaroom Shield States
@@ -330,6 +348,10 @@ leona:
         - binary_sensor.1st_leona_neo_sensor
         - sensor.1st_leona_neo_sensor_luminance
         - sensor.1st_leona_neo_sensor_temperature
+        - light.1st_leona_rgbw_wheel
+        - light.1st_leona_rgbw_white
+        - light.1st_leona_rgbw_white_combined
+        - media_player.leona_speaker_2
 
 
 ##########################################################
@@ -340,10 +362,13 @@ jason:
     name: Jason
     entities:
         - switch.1st_jason_licht_switch
-        - media_player.jason_home
         - binary_sensor.1st_jason_neo_sensor
         - sensor.1st_jason_neo_sensor_luminance
         - sensor.1st_jason_neo_sensor_temperature
+        - light.1st_jason_rgbw_wheel
+        - light.1st_jason_rgbw_white
+        - light.1st_jason_rgbw_white_combined
+        - media_player.jason_speaker
 
 ################################################################################################
 # DACH
@@ -381,14 +406,13 @@ dach_schlaf:
         - sensor.dach_schlaf_motion_temperature
         - light.dach_schlaf_licht_level
         - media_player.schlafzimmer
-        - media_player.schlafzimmer_home
+        - media_player.schlafzimmer_speaker
         - input_boolean.dach_schlaf_tv
         - input_boolean.dach_schlaf_soundbar
         - input_boolean.dach_schlaf_climate
         - climate.schlafzimmer_heizung
         - climate.schlafzimmer_kuhlung
         - group.shield_03_states
-
 
 shield_03_states:
         name: Schlafzimmer Shield States
@@ -410,11 +434,13 @@ shield_03_states:
 dach_bad:
     name: Bad
     entities:
-        - binary_sensor.dach_bad_motion_sensor
+        - binary_sensor.dach_bad_neo_sensor_motion
+        - sensor.dach_bad_neo_sensor_luminance
+        - sensor.dach_bad_neo_sensor_temperature
         - switch.dach_bad_licht_switch
         - switch.dach_bad_licht_switch_2
-        - media_player.badzimmer_home
         - input_select.radio_station_schlafbad
+        - media_player.badezimmer_speaker
 
 ##########################################################
 # Kleiderschrank
@@ -423,7 +449,9 @@ dach_bad:
 dach_kleider:
     name: Kleiderschrank
     entities:
-        - binary_sensor.dach_kleider_motion_sensor
+        - binary_sensor.dach_kleider_motion_2_sensor
+        - sensor.dach_kleider_motion_2_luminance
+        - sensor.dach_kleider_motion_2_temperature
         - switch.dach_kleider_licht_switch
 
 
@@ -436,12 +464,13 @@ house_people:
     view: yes
     entities:
       - device_tracker.oeusqgsv_marcel
-      - device_tracker.galaxys8
-      - device_tracker.samsunggalaxys7edge
+      - device_tracker.oeusqgsv_jeanette
       - proximity.marcel_to_home
+      - proximity.marcel_to_work
       - sensor.marcel_to_home
       - sensor.marcel_to_work
       - group.house_people_bt_tracking
+      - group.house_people_gh_bt_tracking
 
 house_people_bt_tracking:
     name: Bluetooth Tracking
@@ -454,6 +483,14 @@ house_people_bt_tracking:
         - sensor.marcel_car_bt_stube
         - sensor.marcel_nut_bt_rp1
         - sensor.marcel_nut_bt_stube
+
+house_people_gh_bt_tracking:
+    name: Google Home Bluetooth Tracking
+    entities:
+        - device_tracker.marcel_bt_fenix
+        - device_tracker.marcel_bt_car_ibeacon
+        - device_tracker.marcel_bt_nut
+        - device_tracker.marcel_bt_phone
             
 dark_sky:
     name: Dark Sky
@@ -494,7 +531,9 @@ outside:
     entities:
         - switch.out_pool_switch_switch
         - switch.out_pool_switch_switch_2
+        - weather.dark_sky
         - group.netatmo_aussen
+
 
 netatmo_aussen:
     name: Netatmo Aussen
@@ -504,15 +543,5 @@ netatmo_aussen:
         - sensor.netatmo_aussenraum_radio
         - sensor.netatmo_aussenraum_battery
         
-################################################################################################
-# Weather
-################################################################################################        
-
-weather:
-    name: Wetter
-    view: yes
-    entities:
-        - group.dark_sky
-        - group.netatmo_aussen
 
 

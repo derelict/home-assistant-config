@@ -27,3 +27,31 @@
   ignored: true
 "*_seismic_intensity":
   ignored: true    
+
+"*_rgbw_blue":
+  ignored: true
+
+"*_rgbw_red":
+  ignored: true
+
+"*_rgbw_green":
+  ignored: true
+
+"*_rgbw_controller_energy":
+  ignored: true
+
+"*rgbw_controller_power*":
+  ignored: true
+
+"*_exporting":
+  ignored: true
+
+"*_rgbw_controller_powe*":
+  ignored: true
+
+"*_power_management":
+  ignored: true
+
+"*_smokesensor_system":
+  ignored: true
+
