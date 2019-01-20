@@ -75,10 +75,11 @@ heizung:
         - binary_sensor.heizung_multisensor_sensor
         - switch.heizung_licht_switch
         - lock.garage
-        - switch.garage_door
+        - script.open_garage_door
         - sensor.heizung_multisensor_luminance
         - sensor.heizung_multisensor_relative_humidity
         - sensor.heizung_multisensor_temperature
+        - group.garage_door_automation
 
 ##########################################################
 # Salon

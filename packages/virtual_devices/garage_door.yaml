@@ -1,0 +1,120 @@
+
+
+input_number: 
+
+    openduration:
+      name: Open Duration
+      icon: mdi:timer
+      initial: 2
+      min: 0
+      max: 15
+      step: 1
+
+    durationleft:
+      name: "Duration Left"
+      initial: 0
+      max: 1000
+      min: -1000
+      step: 1
+
+    doortimeframe:
+      name: "Door Open Timeframe"
+      initial: 20
+      max: 120
+      min: 10
+      step: 1
+      
+
+sensor:
+    - platform: template
+      sensors:
+        garage_door_keep_open_duration:
+          friendly_name: 'Garage Door keep open duration'
+          value_template: '{{ states.input_number.openduration.state | int * 60 }}'
+          unit_of_measurement: 'sec'
+
+
+
+
+group:
+    garage_door_automation:
+      name: Garage Door Automation
+      entities:
+      - switch.ug_garage_opener_switch_01
+      - input_number.openduration
+      - input_number.durationleft
+      - input_number.doortimeframe
+      - sensor.garage_door_keep_open_duration
+      - script.open_garage_door
+      - script.open_garage_door_long
+      - script.open_garage_door_long_run
+      - script.open_garage_door_iterate
+
+
+
+script:
+
+  open_garage_door:
+    alias: 'Open Garage Door'
+    sequence:
+
+      - service: homeassistant.turn_on
+        entity_id: switch.ug_garage_opener_switch_01
+      
+      - delay: '00:00:02'
+
+      - service: homeassistant.turn_off
+        entity_id: switch.ug_garage_opener_switch_01
+
+
+
+
+  open_garage_door_long:
+    alias: 'Open Garage Door Long'
+    sequence:
+
+      - service: input_number.set_value
+        data_template:
+          entity_id: input_number.durationleft
+          value: "{{ states.sensor.garage_door_keep_open_duration.state|int }}" 
+
+      - service: script.turn_on
+        entity_id: script.open_garage_door_long_run
+
+
+  open_garage_door_long_run:
+    alias: 'Open Garage Door Long Run'
+    sequence:
+
+      - service: script.turn_off
+        entity_id: script.open_garage_door_iterate
+
+      - service: script.turn_on
+        entity_id: script.open_garage_door
+
+      - service: script.turn_on
+        entity_id: script.open_garage_door_iterate
+
+
+  open_garage_door_iterate:
+    alias: 'Open Garage Door Long iterate'
+    sequence:
+      
+      - service: script.turn_off
+        entity_id: script.open_garage_door_long
+
+      - delay: '00:00:{{states.input_number.doortimeframe.state|int}}'
+
+      - service: input_number.set_value
+        data_template:
+          entity_id: input_number.durationleft
+          value: "{{ states.input_number.durationleft.state|int - states.input_number.doortimeframe.state|int }}"
+
+      - service_template: >
+          {% if states.input_number.durationleft.state|int < 1 %}
+            script.turn_off
+          {% else %}
+            script.turn_on
+          {% endif %}
+        data:
+          entity_id: script.open_garage_door_long_run

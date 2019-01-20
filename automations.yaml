@@ -169,8 +169,8 @@
   action:
   - service: lock.unlock
     entity_id: lock.garage
-  - service: homeassistant.turn_on
-    entity_id: switch.garage_door
+    
+  - service: script.open_garage_door_long
 
   - service:  notify.pushover
     data:

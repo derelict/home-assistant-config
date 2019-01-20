@@ -632,15 +632,15 @@ switch:
     qos: 0
     retain: true  
 
-  - platform: mqtt
-    name: "Garage Door"
-    state_topic: "/rpi_support/rpi-021/garage_door"
-    command_topic: "/rpi_support/rpi-021/garage_door/set"
-    payload_on: "open"
-    payload_off: "close"
-    optimistic: false
-    qos: 0
-    retain: false  
+#  - platform: mqtt
+#    name: "Garage Door"
+#    state_topic: "/rpi_support/rpi-021/garage_door"
+#    command_topic: "/rpi_support/rpi-021/garage_door/set"
+#    payload_on: "open"
+#    payload_off: "close"
+#    optimistic: false
+#    qos: 0
+#    retain: false  
 
 input_boolean:
   pc_power:
