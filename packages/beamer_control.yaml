@@ -1,0 +1,15 @@
+
+
+switch:
+  - platform: mqtt
+    name: "1ST Mediaroom Beamer Power"
+    state_topic: "/homecontrol/serial/1st/mediaroom/beamer"
+    command_topic: "/homecontrol/serial/1st/mediaroom/beamer/set"
+    payload_on: "*pow=on#"
+    payload_off: "*pow=off#"
+    state_on: "on"
+    state_off: "off"    
+    optimistic: false
+    qos: 0
+    retain: false
+

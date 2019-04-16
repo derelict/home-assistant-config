@@ -1,0 +1,15 @@
+sensor:
+  - platform: mqtt_room
+    device_id: "f6:70:65:a0:31:25"
+    name: "Marcel Fenix 5X Watch"
+    state_topic: home/home_presence
+    away_timeout: 300
+
+  - platform: mqtt_room
+    device_id: "98:7b:f3:49:bd:ed"
+    name: "Marcel Car iBeacon"
+    state_topic: home/home_presence
+    away_timeout: 300
+
+
+

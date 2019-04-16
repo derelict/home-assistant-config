@@ -1,0 +1,277 @@
+###################################################################
+# Werkstatt
+###################################################################
+
+##########################################
+# Media PC Power Control
+##########################################
+
+input_boolean:
+  
+  werstatt_charger_active:
+    name: Werkstatt Charger Active
+    initial: off
+
+  werkstatt_music:
+    name: "Werkstatt Music"
+    initial: off
+
+switch:
+
+  - platform: wake_on_lan
+    mac_address: "D0-50-99-27-01-C2"
+    name: "Werkstatt PC"
+    host: 10.2.21.2
+    turn_off:
+      service: mqtt.publish
+      data:
+        topic: "/eg/state/werkstatt/power/set"
+        payload: "off"
+
+#  - platform: mqtt
+#    name: "PC Default Music"
+#    state_topic: "/eg/state/werkstatt/music"
+#    command_topic: "/eg/state/werkstatt/music/set"
+#    payload_on: "on"
+#    payload_off: "off"
+#    optimistic: false
+#    qos: 0
+#    retain: true
+
+binary_sensor:
+
+  - platform: mqtt
+    name: "PC Idle State"
+    state_topic: "/eg/state/werkstatt/idle"
+    payload_on: "on"
+    payload_off: "off"
+    qos: 0
+    device_class: connectivity
+
+  - platform: mqtt
+    name: "PC Video App State"
+    state_topic: "/eg/state/werkstatt/fullscreenvideo"
+    payload_on: "on"
+    payload_off: "off"
+    qos: 0
+    device_class: plug
+
+automation:
+
+  #- alias: Turn on Werkstatt Media PC
+  #  trigger:
+  #    platform: state
+  #    entity_id: input_boolean.pc_power
+  #    to: 'on'
+  #  action:
+  #  - service: wake_on_lan.send_magic_packet
+  #    data:
+  #      mac: D0-50-99-27-01-C2
+  #      broadcast_address: 10.2.255.255
+#
+#
+  #- alias: Turn OFF Werkstatt Media PC
+  #  trigger:
+  #    platform: state
+  #    entity_id: input_boolean.pc_power
+  #    to: 'off'
+  #  action:
+  #  - service: mqtt.publish
+  #    data:
+  #      topic: "/eg/state/werkstatt/power/set"
+  #      payload: "off"
+#
+  ###########################################
+  ## Mediapc Power Tracking
+  ###########################################
+#
+  #- alias: Track Media PC ON MQTT
+  #  trigger:
+  #    platform: mqtt
+  #    topic: /eg/state/werkstatt/power
+  #    payload: 'on'
+  #  action:
+  #    service: homeassistant.turn_on
+  #    entity_id: input_boolean.pc_power  
+#
+  #- alias: Track Media PC OFF MQTT
+  #  trigger:
+  #    platform: mqtt
+  #    topic: /eg/state/werkstatt/power
+  #    payload: 'off'
+  #  action:
+  #    service: homeassistant.turn_off
+  #    entity_id: input_boolean.pc_power  
+
+  ##########################################
+  # General Motion and Idle Controll
+  ##########################################
+
+  - alias: Turn Werkstatt Music ON
+    trigger:
+      - platform: state
+        entity_id: input_boolean.werkstatt_music
+        to: 'on'
+
+    action:
+      - service: media_player.select_source
+        data:
+          entity_id: media_player.spotify
+          source: MEDIAPC02
+      - service: media_player.play_media
+        data:
+          entity_id: media_player.spotify
+          media_content_id: !secret spotify_playlist_vocaltrance
+          media_content_type: playlist
+      - service: media_player.shuffle_set
+        data:
+          entity_id: media_player.spotify
+          shuffle: true
+      - service: media_player.media_next_track
+        data:
+          entity_id: media_player.spotify
+
+  - alias: Turn Werkstatt Music OFF
+    trigger:
+      - platform: state
+        entity_id: input_boolean.werkstatt_music
+        to: 'off'
+
+    action:
+      - service: media_player.select_source
+        data:
+          entity_id: media_player.spotify
+          source: MEDIAPC02
+      - service: media_player.media_pause
+        entity_id: media_player.spotify
+
+
+  - alias: Turn Werkstatt System ON
+    trigger:
+        - platform: state
+          entity_id: binary_sensor.ug_werkstatt_motion_sensor_2
+          to: 'on'
+        - platform: state
+          entity_id: switch.werkstatt_decken_licht_switch
+          to: 'on'
+        - platform: state
+          entity_id: binary_sensor.pc_idle_state
+          to: 'on'
+    condition: 
+      condition: and
+      conditions:
+        - condition: state
+          entity_id: binary_sensor.pc_video_app_state
+          state: 'off'
+        - condition: state
+          entity_id: switch.werkstatt_pc
+          state: 'off'
+        - condition: state
+          entity_id: input_boolean.werkstatt_music
+          state: 'off'        
+    action:
+         - service: homeassistant.turn_on
+           entity_id: switch.werkstatt_decken_licht_switch
+         - service: homeassistant.turn_on
+           entity_id: switch.werkstatt_pult_licht_switch    
+         - service: homeassistant.turn_on
+           entity_id: switch.werkstatt_pult_licht_switch_2    
+         - service: homeassistant.turn_on
+           entity_id: switch.werkstatt_pc  
+         - service: homeassistant.turn_on
+           entity_id: input_boolean.werkstatt_music
+
+  - alias: Turn Werkstatt System OFF
+    trigger:
+        - platform: state
+          entity_id: binary_sensor.ug_werkstatt_motion_sensor_2
+          to: 'off'
+        - platform: state
+          entity_id: switch.werkstatt_decken_licht_switch
+          to: 'off'
+        - platform: state
+          entity_id: binary_sensor.pc_idle_state
+          to: 'off'
+    condition: 
+      condition: and
+      conditions:
+        - condition: state
+          entity_id: binary_sensor.ug_werkstatt_motion_sensor_2
+          state: 'off'
+        - condition: state
+          entity_id: binary_sensor.pc_idle_state
+          state: 'off'
+        - condition: state
+          entity_id: binary_sensor.pc_video_app_state
+          state: 'off'        
+    action:
+        - service: homeassistant.turn_off
+          entity_id: input_boolean.werkstatt_music
+        - service: homeassistant.turn_off
+          entity_id: switch.werkstatt_decken_licht_switch
+        - service: homeassistant.turn_off
+          entity_id: switch.werkstatt_pult_licht_switch    
+        - service: homeassistant.turn_off
+          entity_id: switch.werkstatt_pult_licht_switch_2 
+        - service: homeassistant.turn_off
+          entity_id: switch.werkstatt_pc 
+
+  ##########################################
+  # Movie Handling
+  ##########################################
+
+  - alias: Werkstatt Movie Play ON
+    trigger:
+        - platform: state
+          entity_id: binary_sensor.pc_video_app_state
+          to: 'on'
+    action:
+        - service: homeassistant.turn_off
+          entity_id: switch.werkstatt_decken_licht_switch
+        - service: homeassistant.turn_off
+          entity_id: switch.werkstatt_pult_licht_switch    
+        - service: homeassistant.turn_off
+          entity_id: switch.werkstatt_pult_licht_switch_2 
+        - service: homeassistant.turn_off
+          entity_id: switch.pc_default_music  
+
+  - alias: Werkstatt Movie Play OFF
+    trigger:
+      platform: state
+      entity_id: binary_sensor.pc_video_app_state
+      to: 'off'
+    action:
+        - service: homeassistant.turn_on
+          entity_id: switch.werkstatt_decken_licht_switch
+        - service: homeassistant.turn_on
+          entity_id: switch.werkstatt_pult_licht_switch    
+        - service: homeassistant.turn_on
+          entity_id: switch.werkstatt_pult_licht_switch_2  
+        - service: homeassistant.turn_on
+          entity_id: switch.pc_default_music  
+
+  ##########################################
+  # Charge Notification handling
+  ##########################################
+
+  - alias: Werkstatt Report Charging ON
+    trigger:
+          platform: numeric_state
+          entity_id: sensor.werkstatt_charger_switch_power
+          above: 40
+          for:
+              minutes: 1
+    action:
+          service: homeassistant.turn_on
+          entity_id: input_boolean.werstatt_charger_active
+
+  - alias: Werkstatt Report Charging OFF
+    trigger:
+          platform: numeric_state
+          entity_id: sensor.werkstatt_charger_switch_power
+          below: 80
+          for:
+              minutes: 1
+    action:
+          service: homeassistant.turn_off
+          entity_id: input_boolean.werstatt_charger_active

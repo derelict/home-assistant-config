@@ -1,3 +1,5 @@
+#!/bin/python
+
 import paho.mqtt.client as mqttClient
 import time
 
@@ -297,7 +299,7 @@ def turn_device_on_off(myIP, myState):
             
         #time.sleep(1)
         
-        client.publish("/adb/shield/" +  myIP + "/powerstate",         myState)
+        client.publish("/adb/shield/" +  myIP + "/powerstate",         myState, qos=2, retain=True)
         
         
 
@@ -514,15 +516,15 @@ def detailedstatus():
             print
 
 
-            client.publish("/adb/shield/" +  ip + "/mWakefulness",       shieldips[ip]['mWakefulness'])
-            client.publish("/adb/shield/" +  ip + "/mDisplayPowerState", shieldips[ip]['mDisplayPowerState'])
-            client.publish("/adb/shield/" +  ip + "/myWakeLocks",        shieldips[ip]['myWakeLocks'])
-            client.publish("/adb/shield/" +  ip + "/focusapp",           shieldips[ip]['focusapp'])
-            client.publish("/adb/shield/" +  ip + "/focuswindow",        shieldips[ip]['focuswindow'])
-            client.publish("/adb/shield/" +  ip + "/appname",            shieldips[ip]['appname'])
-            client.publish("/adb/shield/" +  ip + "/mVideoPlayback",     shieldips[ip]['mVideoPlayback'])
+            client.publish("/adb/shield/" +  ip + "/mWakefulness",       shieldips[ip]['mWakefulness']      , qos=2, retain=True)
+            client.publish("/adb/shield/" +  ip + "/mDisplayPowerState", shieldips[ip]['mDisplayPowerState'], qos=2, retain=True)
+            client.publish("/adb/shield/" +  ip + "/myWakeLocks",        shieldips[ip]['myWakeLocks']       , qos=2, retain=True)
+            client.publish("/adb/shield/" +  ip + "/focusapp",           shieldips[ip]['focusapp']          , qos=2, retain=True)
+            client.publish("/adb/shield/" +  ip + "/focuswindow",        shieldips[ip]['focuswindow']       , qos=2, retain=True)
+            client.publish("/adb/shield/" +  ip + "/appname",            shieldips[ip]['appname']           , qos=2, retain=True)
+            client.publish("/adb/shield/" +  ip + "/mVideoPlayback",     shieldips[ip]['mVideoPlayback']    , qos=2, retain=True)
 
-            client.publish("/adb/shield/" +  ip + "/powerstate",         shieldips[ip]['powerstate'])
+            client.publish("/adb/shield/" +  ip + "/powerstate",         shieldips[ip]['powerstate']        , qos=2, retain=True)
             
         else:
             print "   --> No State Changes so far"

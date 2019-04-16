@@ -18,7 +18,7 @@
           #        - /home/pi/snapshot1.jpg
           #        - /home/pi/snapshot2.jpg
 
-    - service:  notify.pushover
+    - service:  notify.slack
       data:
         message: Z-Wave Network is Ready
         title: Z-Wave Status
@@ -38,7 +38,7 @@
           title: 'Z-Wave Network - Complete'
           message: 'Z-Wave Network is Complete'
 
-    - service:  notify.pushover
+    - service:  notify.slack
       data:
         message: Z-Wave Network is Complete
         title: Z-Wave Status
@@ -141,23 +141,31 @@
 - alias: Unlock Garage on Presence
   trigger:
 
-    - platform: zone
-      entity_id: device_tracker.oeusqgsv_marcel
-      zone: zone.home
-      event: enter
-    - platform: zone
-      entity_id: device_tracker.oeusqgsv_marcel
-      zone: zone.marcel_home_large
-      event: enter
+    - platform: state
+      entity_id: person.marcel_2
+      from: 'not_home'
+      to: 'home'
+    #- platform: zone
+    #  entity_id: device_tracker.oeusqgsv_marcel
+    #  zone: zone.home
+    #  event: enter
+    ###- platform: zone
+    ###  entity_id: device_tracker.oeusqgsv_marcel
+    ###  zone: zone.marcel_home_large
+    ###  event: enter
 
-    - platform: zone
-      entity_id: device_tracker.oeusqgsv_jeanette
-      zone: zone.home
-      event: enter
-    - platform: zone
-      entity_id: device_tracker.oeusqgsv_jeanette
-      zone: zone.marcel_home_large
-      event: enter
+    - platform: state
+      entity_id: person.jeanette
+      from: 'not_home'
+      to: 'home'
+    #- platform: zone
+    #  entity_id: device_tracker.oeusqgsv_jeanette
+    #  zone: zone.home
+    #  event: enter
+    ###- platform: zone
+    ###  entity_id: device_tracker.oeusqgsv_jeanette
+    ###  zone: zone.marcel_home_large
+    ###  event: enter
 
     #- platform: numeric_state
     #  entity_id: 
@@ -171,12 +179,7 @@
     entity_id: lock.garage
     
   - service: script.open_garage_door_long
-
-  - service:  notify.pushover
-    data:
-      message: Opening Garage Door
-      title: Presence Automation
-
+  
   - service:  notify.slack
     data:
       message: Opening Garage Door
@@ -231,194 +234,7 @@
   #      entity_id: media_player.jason_home
 
         
-        
-###################################################################
-# Werkstatt
-###################################################################
 
-##########################################
-# Media PC Power Control
-##########################################
-
-- alias: Turn on Werkstatt Media PC
-  trigger:
-    platform: state
-    entity_id: input_boolean.pc_power
-    to: 'on'
-  action:
-  - service: wake_on_lan.send_magic_packet
-    data:
-      mac: D0-50-99-27-01-C2
-      broadcast_address: 10.2.255.255
-
-      
-- alias: Turn OFF Werkstatt Media PC
-  trigger:
-    platform: state
-    entity_id: input_boolean.pc_power
-    to: 'off'
-  action:
-  - service: mqtt.publish
-    data:
-      topic: "/eg/state/werkstatt/power/set"
-      payload: "off"
-
-##########################################
-# Mediapc Power Tracking
-##########################################
-
-- alias: Track Media PC ON MQTT
-  trigger:
-    platform: mqtt
-    topic: /eg/state/werkstatt/power
-    payload: 'on'
-  action:
-    service: homeassistant.turn_on
-    entity_id: input_boolean.pc_power  
-
-- alias: Track Media PC OFF MQTT
-  trigger:
-    platform: mqtt
-    topic: /eg/state/werkstatt/power
-    payload: 'off'
-  action:
-    service: homeassistant.turn_off
-    entity_id: input_boolean.pc_power  
-
-##########################################
-# General Motion and Idle Controll
-##########################################
-    
-- alias: Turn Werkstatt System ON
-  trigger:
-      - platform: state
-        entity_id: binary_sensor.ug_werkstatt_motion_sensor
-        to: 'on'
-      - platform: state
-        entity_id: switch.werkstatt_decken_licht_switch
-        to: 'on'
-      - platform: state
-        entity_id: binary_sensor.pc_idle_state
-        to: 'on'
-  condition: 
-    condition: and
-    conditions:
-      - condition: state
-        entity_id: binary_sensor.pc_video_app_state
-        state: 'off'
-      - condition: state
-        entity_id: input_boolean.pc_power
-        state: 'off'
-      - condition: state
-        entity_id: switch.pc_default_music
-        state: 'off'        
-  action:
-       - service: homeassistant.turn_on
-         entity_id: switch.werkstatt_decken_licht_switch
-       - service: homeassistant.turn_on
-         entity_id: switch.werkstatt_pult_licht_switch    
-       - service: homeassistant.turn_on
-         entity_id: switch.werkstatt_pult_licht_switch_2    
-       - service: homeassistant.turn_on
-         entity_id: input_boolean.pc_power  
-       - service: homeassistant.turn_on
-         entity_id: switch.pc_default_music
-        
-- alias: Turn Werkstatt System OFF
-  trigger:
-      - platform: state
-        entity_id: binary_sensor.ug_werkstatt_motion_sensor
-        to: 'off'
-      - platform: state
-        entity_id: switch.werkstatt_decken_licht_switch
-        to: 'off'
-      - platform: state
-        entity_id: binary_sensor.pc_idle_state
-        to: 'off'
-  condition: 
-    condition: and
-    conditions:
-      - condition: state
-        entity_id: binary_sensor.ug_werkstatt_motion_sensor
-        state: 'off'
-      - condition: state
-        entity_id: binary_sensor.pc_idle_state
-        state: 'off'
-      - condition: state
-        entity_id: binary_sensor.pc_video_app_state
-        state: 'off'        
-  action:
-      - service: homeassistant.turn_off
-        entity_id: switch.pc_default_music
-      - service: homeassistant.turn_off
-        entity_id: switch.werkstatt_decken_licht_switch
-      - service: homeassistant.turn_off
-        entity_id: switch.werkstatt_pult_licht_switch    
-      - service: homeassistant.turn_off
-        entity_id: switch.werkstatt_pult_licht_switch_2 
-      - service: homeassistant.turn_off
-        entity_id: input_boolean.pc_power  
-
-##########################################
-# Movie Handling
-##########################################
-        
-- alias: Werkstatt Movie Play ON
-  trigger:
-      - platform: state
-        entity_id: binary_sensor.pc_video_app_state
-        to: 'on'
-  action:
-      - service: homeassistant.turn_off
-        entity_id: switch.werkstatt_decken_licht_switch
-      - service: homeassistant.turn_off
-        entity_id: switch.werkstatt_pult_licht_switch    
-      - service: homeassistant.turn_off
-        entity_id: switch.werkstatt_pult_licht_switch_2 
-      - service: homeassistant.turn_off
-        entity_id: switch.pc_default_music  
-  
-- alias: Werkstatt Movie Play OFF
-  trigger:
-    platform: state
-    entity_id: binary_sensor.pc_video_app_state
-    to: 'off'
-  action:
-      - service: homeassistant.turn_on
-        entity_id: switch.werkstatt_decken_licht_switch
-      - service: homeassistant.turn_on
-        entity_id: switch.werkstatt_pult_licht_switch    
-      - service: homeassistant.turn_on
-        entity_id: switch.werkstatt_pult_licht_switch_2  
-      - service: homeassistant.turn_on
-        entity_id: switch.pc_default_music  
-    
-##########################################
-# Charge Notification handling
-##########################################
-
-- alias: Werkstatt Report Charging ON
-  trigger:
-        platform: numeric_state
-        entity_id: sensor.werkstatt_charger_switch_power
-        above: 40
-        for:
-            minutes: 1
-  action:
-        service: homeassistant.turn_on
-        entity_id: input_boolean.werstatt_charger_active
-  
-- alias: Werkstatt Report Charging OFF
-  trigger:
-        platform: numeric_state
-        entity_id: sensor.werkstatt_charger_switch_power
-        below: 80
-        for:
-            minutes: 1
-  action:
-        service: homeassistant.turn_off
-        entity_id: input_boolean.werstatt_charger_active
-        
     
 ################################################################################################
 # Treppenhaus
@@ -551,7 +367,7 @@
         entity_id: light.1st_leona_level
         state: 'off'
       - condition: time
-        after: '08:00:00'
+        after: '07:00:00'
         before: '19:00:00'
 
   action:
@@ -573,12 +389,14 @@
     condition: and
     conditions:
       - condition: time
-        after: '08:00:00'
+        after: '07:00:00'
         before: '19:00:00'
 
   action:
     - service: light.turn_off
-      entity_id: light.1st_leona_level 
+      entity_id: light.1st_leona_level
+    - service: light.turn_off
+      entity_id: light.1st_leona_rgbw_wheel
 
 
 ##########################################
@@ -599,7 +417,7 @@
         entity_id: switch.1st_jason_licht_switch
         state: 'off'
       - condition: time
-        after: '08:00:00'
+        after: '07:00:00'
         before: '19:00:00'
 
   action:
@@ -621,12 +439,14 @@
     condition: and
     conditions:
       - condition: time
-        after: '08:00:00'
+        after: '07:00:00'
         before: '19:00:00'
 
   action:
-    service: homeassistant.turn_off
-    entity_id: switch.1st_jason_licht_switch 
+    - service: homeassistant.turn_off
+      entity_id: switch.1st_jason_licht_switch 
+    - service: light.turn_off
+      entity_id: light.1st_jason_rgbw_wheel   
 
 
 
@@ -1207,3 +1027,4 @@
     event: start
   action:
     service: automation.turn_on
+    entity_id: all

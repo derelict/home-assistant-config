@@ -1,88 +1,4 @@
 
-#          target: mediapc
-
-
-#      - service:  notify.pushover
-#        data:
-#          title: Garage Door
-#          message: The garage door is open.
-#          data:
-#            url: https://home-assistant.io/
-#            url_title: Home Assistant
-#            priority: 2
-#            sound: siren
-#            expire: 3600
-#            retry: 30
-#            timestamp: true
-#            file:
-#              path: /tmp/snapshot_camera_stube.jpg
-
-
-
-notify:
-
-  - name: pushover
-    platform: pushover
-    api_key: !secret pushover_api
-    user_key: !secret pushover_user
-
-  # - name: pushover_emergency_alerts_default
-  #   platform: group
-  #   services:
-  #       - service: pushover
-  #         data:
-  #           title: Garage Door
-  #           message: The garage door is open.
-  #           data:
-  #             url: https://home-assistant.io/
-  #             url_title: Home Assistant
-  #             priority: 2
-  #             sound: siren
-  #             expire: 3600
-  #             retry: 30
-  #             timestamp: true
-  #             file:
-  #               path: /tmp/snapshot_camera_stube.jpg
-
-#script:
-#
-#  pushover_test:
-#    alias: 'Pushover Test'
-#    sequence:
-#      - service: camera.snapshot
-#        data:
-#          entity_id: camera.stube
-#          filename: /tmp/snapshot_camera_stube.jpg
-#
-#      - service:  notify.pushover
-#        data:
-#          title: Garage Door
-#          message: The garage door is open.
-#          data:
-#            url: https://home-assistant.io/
-#            url_title: Home Assistant
-#            priority: 2
-#            sound: siren
-#            expire: 3600
-#            retry: 30
-#            timestamp: true
-#            file:
-#              path: /tmp/snapshot_camera_stube.jpg
-
-#alert:
-#  test_alert:
-#    name: Test Alert Open
-#    done_message: Test Alert Closed
-#    entity_id: input_boolean.test_switch
-#    state: 'on'
-#    repeat: 30
-#    can_acknowledge: True
-#    skip_first: false
-#    notifiers:
-#      - pushover_emergency_alerts_default
-
-
-
 ##############################################################################################################################
 # INPUT BOOLEAN
 ##############################################################################################################################
@@ -101,13 +17,6 @@ input_boolean:
 
   eg_stube_soundbar:
     name: Soundbar
-
-###############################################################
-# MEDIAROOM
-###############################################################
-
-  1st_mediaroom_beamer:
-    name: Beamer
 
 ###############################################################
 # SCHLAFZIMMER
@@ -172,17 +81,12 @@ automation:
           - input_boolean.test_switch
         to: 'on'
     action:
-    - service:  notify.pushover
+    - service:  notify.slack
       data_template:
-         message: '{{ trigger.from_state.name }} has detected Smoke!'
+        message: '{{ trigger.from_state.name }} has detected Smoke!'
       data:
         title: Smoke Alarm
-        data:
-          priority: 2
-          sound: siren
-          expire: 3600
-          retry: 30
-          timestamp: true
+        target: "#home-assistant-alerts"
 
 
   - alias: Send Water Emergency Notifications
@@ -194,35 +98,17 @@ automation:
           - input_boolean.test_switch
         to: 'on'
     action:
-    - service:  notify.pushover
+    - service:  notify.slack
       data_template:
-         message: '{{ trigger.from_state.name }} has detected Water!'
+        message: '{{ trigger.from_state.name }} has detected Water!'
       data:
         title: Water Alarm
-        data:
-          priority: 2
-          sound: siren
-          expire: 3600
-          retry: 30
-          timestamp: true
+        target: "#home-assistant-alerts"
+
 
 ##############################################################################################################################
 # ALARM
 ##############################################################################################################################
-
-  - alias: Trigger alarm while armed away
-    trigger:
-      - platform: state
-        entity_id: input_boolean.test_switch
-        to: 'on'
-    condition:
-      - condition: state
-        entity_id: alarm_control_panel.ha_alarm
-        state: armed_away
-    action:
-      service: alarm_control_panel.alarm_trigger
-      entity_id: alarm_control_panel.ha_alarm
-
 
   - alias: Send Alarm Notifications
     trigger:
@@ -236,17 +122,12 @@ automation:
         entity_id: camera.stube
         filename: /tmp/snapshot_camera_stube.jpg
 
-    - service:  notify.pushover
+    - service:  notify.slack
       data:
         message: The House Alarm has been triggered
         title: House Alarm
         data:
-          priority: 2
-          sound: siren
-          expire: 3600
-          retry: 30
-          timestamp: true
-          file:
+            file:
             path: /tmp/snapshot_camera_stube.jpg          
 
 
@@ -264,12 +145,12 @@ automation:
           - device_tracker.oeusqgsv_marcel
           - device_tracker.oeusqgsv_jeanette
           
-      - platform: zone
-        zone: zone.home_large
-        event: enter
-        entity_id: 
-          - device_tracker.oeusqgsv_marcel
-          - device_tracker.oeusqgsv_jeanette    
+      #- platform: zone
+      #  zone: zone.home_large
+      #  event: enter
+      #  entity_id: 
+      #    - device_tracker.oeusqgsv_marcel
+      #    - device_tracker.oeusqgsv_jeanette    
           
       - platform: zone
         zone: zone.marcel_work
@@ -286,17 +167,12 @@ automation:
           - device_tracker.oeusqgsv_jeanette    
   
     action:
-      - service:  notify.pushover
-        data_template:
-           message: '{{ trigger.from_state.name }} has entered the {{ trigger.zone.attributes.friendly_name }} Zone'
-        data:
-          title: Home Presence Detection
-      
       - service:  notify.slack
         data_template:
            message: '{{ trigger.from_state.name }} has entered the {{ trigger.zone.attributes.friendly_name }} Zone'
         data:
           title: Home Presence Detection
+      
 
   - alias: Send Presence Leave Notifications
 
@@ -330,11 +206,6 @@ automation:
 #          - device_tracker.oeusqgsv_jeanette    
   
     action:
-      - service:  notify.pushover
-        data_template:
-           message: '{{ trigger.from_state.name }} has left the {{ trigger.zone.attributes.friendly_name }} Zone'
-        data:
-          title: Home Presence Detection          
       - service:  notify.slack
         data_template:
            message: '{{ trigger.from_state.name }} has left the {{ trigger.zone.attributes.friendly_name }} Zone'
@@ -357,11 +228,6 @@ automation:
           - sensor.marcel_nut_bt_stube
         above: 10
     action:
-      - service:  notify.pushover
-        data_template:
-           message: '{{ trigger.from_state.name }} Detected'
-        data:
-          title: Bluetooth Detection  
 
       - service:  notify.slack
         data_template:
@@ -383,10 +249,11 @@ automation:
       entity_id: switch.shield_01_power
       to: 'on'
     action:
-    - service: input_boolean.turn_on
+    - service: homeassistant.turn_on
       entity_id: 
-        - input_boolean.eg_stube_tv
-        - input_boolean.eg_stube_soundbar
+        - switch.eg_ir_tv_power
+        - switch.eg_ir_soundbar_power
+        - switch.eg_ir_soundbar_source
 
   - alias: Shield 01 OFF Handling
     trigger:
@@ -394,10 +261,10 @@ automation:
       entity_id: switch.shield_01_power
       to: 'off'
     action:
-    - service: input_boolean.turn_off
+    - service: homeassistant.turn_off
       entity_id: 
-        - input_boolean.eg_stube_tv
-        - input_boolean.eg_stube_soundbar
+        - switch.eg_ir_tv_power
+        - switch.eg_ir_soundbar_power
 
 #######################################
 # SHIELD FULL SCREEN VIDEO LIGHT CONTROL
@@ -423,65 +290,120 @@ automation:
       entity_id: 
         - switch.eg_stube_licht_1_switch
 
-#######################################
-# TV
-#######################################
+########################################
+## TV
+########################################
+#
+#  - alias: Turn Stube TV ON
+#    trigger:
+#      platform: state
+#      entity_id: input_boolean.eg_stube_tv
+#      to: 'on'
+#    action:
+#    - service: mqtt.publish
+#      data:
+#        topic: "/rpi_support/mediapc01/sendir/samsung"
+#        payload: "KEY_BLUE"   
+#    - service: mqtt.publish
+#      data:
+#        topic: "/rpi_support/mediapc01/sendir/samsung"
+#        payload: "BTN_TOP" 
+#
+#  - alias: Turn Stube TV OFF
+#    trigger:
+#      platform: state
+#      entity_id: input_boolean.eg_stube_tv
+#      to: 'off'
+#    action:
+#    - service: mqtt.publish
+#      data:
+#        topic: "/rpi_support/mediapc01/sendir/samsung"
+#        payload: "KEY_GREEN"   
+#
+########################################
+## SOUNDBAR
+########################################
+#
+#  - alias: Turn Stube Soundbar ON
+#    trigger:
+#      platform: state
+#      entity_id: input_boolean.eg_stube_soundbar
+#      to: 'on'
+#    action:
+#    - service: mqtt.publish
+#      data:
+#        topic: "/rpi_support/mediapc01/sendir/soundbar"
+#        payload: "BTN_TOUCH"   
+#    - service: mqtt.publish
+#      data:
+#        topic: "/rpi_support/mediapc01/sendir/soundbar"
+#        payload: "BTN_TOP" 
+#
+#  - alias: Turn Stube Soundbar OFF
+#    trigger:
+#      platform: state
+#      entity_id: input_boolean.eg_stube_soundbar
+#      to: 'off'
+#    action:
+#    - service: mqtt.publish
+#      data:
+#        topic: "/rpi_support/mediapc01/sendir/soundbar"
+#        payload: "BTN_TR" 
 
-  - alias: Turn Stube TV ON
-    trigger:
-      platform: state
-      entity_id: input_boolean.eg_stube_tv
-      to: 'on'
-    action:
-    - service: mqtt.publish
-      data:
-        topic: "/rpi_support/mediapc01/sendir/samsung"
-        payload: "KEY_BLUE"   
-    - service: mqtt.publish
-      data:
-        topic: "/rpi_support/mediapc01/sendir/samsung"
-        payload: "BTN_TOP" 
+# #######################################
+# # TV
+# #######################################
+# 
+#   - alias: Turn Stube TV ON
+#     trigger:
+#       platform: state
+#       entity_id: input_boolean.eg_stube_tv
+#       to: 'on'
+#     action:
+#     - service: homeassistant.turn_on
+#       entity_id: 
+#         - switch.ug_ir_tv_power
+#     - service: homeassistant.turn_on
+#       entity_id: 
+#         - switch.ug_ir_tv_source
+# 
+#   - alias: Turn Stube TV OFF
+#     trigger:
+#       platform: state
+#       entity_id: input_boolean.eg_stube_tv
+#       to: 'off'
+#     action:
+#     - service: homeassistant.turn_off
+#       entity_id: 
+#         - switch.ug_ir_tv_power
+# 
+# #######################################
+# # SOUNDBAR
+# #######################################
+# 
+#   - alias: Turn Stube Soundbar ON
+#     trigger:
+#       platform: state
+#       entity_id: input_boolean.eg_stube_soundbar
+#       to: 'on'
+#     action:
+#     - service: homeassistant.turn_on
+#       entity_id: 
+#         - switch.ug_ir_soundbar_power
+#     - service: homeassistant.turn_on
+#       entity_id: 
+#         - switch.ug_ir_soundbar_source
+# 
+#   - alias: Turn Stube Soundbar OFF
+#     trigger:
+#       platform: state
+#       entity_id: input_boolean.eg_stube_soundbar
+#       to: 'off'
+#     action:
+#     - service: homeassistant.turn_off
+#       entity_id: 
+#         - switch.ug_ir_soundbar_power
 
-  - alias: Turn Stube TV OFF
-    trigger:
-      platform: state
-      entity_id: input_boolean.eg_stube_tv
-      to: 'off'
-    action:
-    - service: mqtt.publish
-      data:
-        topic: "/rpi_support/mediapc01/sendir/samsung"
-        payload: "KEY_GREEN"   
-
-#######################################
-# SOUNDBAR
-#######################################
-
-  - alias: Turn Stube Soundbar ON
-    trigger:
-      platform: state
-      entity_id: input_boolean.eg_stube_soundbar
-      to: 'on'
-    action:
-    - service: mqtt.publish
-      data:
-        topic: "/rpi_support/mediapc01/sendir/soundbar"
-        payload: "BTN_TOUCH"   
-    - service: mqtt.publish
-      data:
-        topic: "/rpi_support/mediapc01/sendir/soundbar"
-        payload: "BTN_TOP" 
-
-  - alias: Turn Stube Soundbar OFF
-    trigger:
-      platform: state
-      entity_id: input_boolean.eg_stube_soundbar
-      to: 'off'
-    action:
-    - service: mqtt.publish
-      data:
-        topic: "/rpi_support/mediapc01/sendir/soundbar"
-        payload: "BTN_TR" 
 
 ###############################################################
 # MEDIAROOM
@@ -497,9 +419,9 @@ automation:
       entity_id: switch.shield_02_power
       to: 'on'
     action:
-    - service: input_boolean.turn_on
+    - service: homeassistant.turn_on
       entity_id: 
-        - input_boolean.1st_mediaroom_beamer
+        - switch.1st_mediaroom_beamer_power
     - service: media_player.turn_on
       data:
         entity_id: media_player.mediaroom_avr_player
@@ -514,38 +436,12 @@ automation:
       entity_id: switch.shield_02_power
       to: 'off'
     action:
-    - service: input_boolean.turn_off
+    - service: homeassistant.turn_off
       entity_id: 
-        - input_boolean.1st_mediaroom_beamer
+        - switch.1st_mediaroom_beamer_power
     - service: media_player.turn_off
       data:
         entity_id: media_player.mediaroom_avr_player
-
-#######################################
-# BEAMER
-#######################################
-
-  - alias: Turn Mediaroom Beamer ON
-    trigger:
-      platform: state
-      entity_id: input_boolean.1st_mediaroom_beamer
-      to: 'on'
-    action:
-    - service: mqtt.publish
-      data:
-        topic: "/rpi_support/mediapc02/sendserial"
-        payload: "pow=on"   
-
-  - alias: Turn Mediaroom Beamer OFF
-    trigger:
-      platform: state
-      entity_id: input_boolean.1st_mediaroom_beamer
-      to: 'off'
-    action:
-    - service: mqtt.publish
-      data:
-        topic: "/rpi_support/mediapc02/sendserial"
-        payload: "pow=off"   
 
 #######################################
 # SHIELD FULL SCREEN VIDEO LIGHT CONTROL
@@ -585,10 +481,11 @@ automation:
       entity_id: switch.shield_03_power
       to: 'on'
     action:
-    - service: input_boolean.turn_on
+    - service: homeassistant.turn_on
       entity_id: 
-        - input_boolean.dach_schlaf_tv
-        - input_boolean.dach_schlaf_soundbar
+        - switch.dach_ir_tv_power
+        - switch.dach_ir_soundbar_power
+        - switch.dach_ir_soundbar_source
 
   - alias: Shield 03 OFF Handling
     trigger:
@@ -596,70 +493,64 @@ automation:
       entity_id: switch.shield_03_power
       to: 'off'
     action:
-    - service: input_boolean.turn_off
+    - service: homeassistant.turn_off
       entity_id: 
-        - input_boolean.dach_schlaf_tv
-        - input_boolean.dach_schlaf_soundbar
+        - switch.dach_ir_tv_power
+        - switch.dach_ir_soundbar_power
 
-#######################################
-# TV
-#######################################
-
-  - alias: Turn Schlafzimmer TV ON
-    trigger:
-      platform: state
-      entity_id: input_boolean.dach_schlaf_tv
-      to: 'on'
-    action:
-    - service: mqtt.publish
-      data:
-        topic: "/rpi_support/mediapc03/sendir/samsung"
-        payload: "KEY_BLUE"   
-    - service: mqtt.publish
-      data:
-        topic: "/rpi_support/mediapc03/sendir/samsung"
-        payload: "BTN_TOP2" 
-
-  - alias: Turn Schlafzimmer TV OFF
-    trigger:
-      platform: state
-      entity_id: input_boolean.dach_schlaf_tv
-      to: 'off'
-    action:
-    - service: mqtt.publish
-      data:
-        topic: "/rpi_support/mediapc03/sendir/samsung"
-        payload: "KEY_GREEN"   
-
-#######################################
-# SOUNDBAR
-#######################################
-
-  - alias: Turn Schlafzimmer Soundbar ON
-    trigger:
-      platform: state
-      entity_id: input_boolean.dach_schlaf_soundbar
-      to: 'on'
-    action:
-    - service: mqtt.publish
-      data:
-        topic: "/rpi_support/mediapc03/sendir/soundbar"
-        payload: "BTN_TOUCH"   
-    - service: mqtt.publish
-      data:
-        topic: "/rpi_support/mediapc03/sendir/soundbar"
-        payload: "BTN_TOP2" 
-
-  - alias: Turn Schlafzimmer Soundbar OFF
-    trigger:
-      platform: state
-      entity_id: input_boolean.dach_schlaf_soundbar
-      to: 'off'
-    action:
-    - service: mqtt.publish
-      data:
-        topic: "/rpi_support/mediapc03/sendir/soundbar"
-        payload: "BTN_TR" 
+# #######################################
+# # TV
+# #######################################
+# 
+#   - alias: Turn Dach TV ON
+#     trigger:
+#       platform: state
+#       entity_id: input_boolean.dach_schlaf_tv
+#       to: 'on'
+#     action:
+#     - service: homeassistant.turn_on
+#       entity_id: 
+#         - switch.dach_ir_tv_power
+#     - service: homeassistant.turn_on
+#       entity_id: 
+#         - switch.dach_ir_tv_source
+# 
+#   - alias: Turn Dach TV OFF
+#     trigger:
+#       platform: state
+#       entity_id: input_boolean.dach_schlaf_tv
+#       to: 'off'
+#     action:
+#     - service: homeassistant.turn_off
+#       entity_id: 
+#         - switch.dach_ir_tv_power
+# 
+# #######################################
+# # SOUNDBAR
+# #######################################
+# 
+#   - alias: Turn Dach Soundbar ON
+#     trigger:
+#       platform: state
+#       entity_id: input_boolean.dach_schlaf_soundbar
+#       to: 'on'
+#     action:
+#     - service: homeassistant.turn_on
+#       entity_id: 
+#         - switch.dach_ir_soundbar_power
+#     - service: homeassistant.turn_on
+#       entity_id: 
+#         - switch.dach_ir_soundbar_source
+# 
+#   - alias: Turn Dach Soundbar OFF
+#     trigger:
+#       platform: state
+#       entity_id: input_boolean.dach_schlaf_soundbar
+#       to: 'off'
+#     action:
+#     - service: homeassistant.turn_off
+#       entity_id: 
+#         - switch.dach_ir_soundbar_power
 
 #######################################
 # CLIMATE

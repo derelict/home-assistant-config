@@ -102,9 +102,9 @@ salon:
 werkstatt:
     name: Werkstatt
     entities:
-        - binary_sensor.ug_werkstatt_motion_sensor
-        - sensor.ug_werkstatt_motion_sensor_luminance
-        - sensor.ug_werkstatt_motion_sensor_temperature
+        - binary_sensor.ug_werkstatt_motion_sensor_2
+        - sensor.ug_werkstatt_motion_sensor_2_luminance
+        - sensor.ug_werkstatt_motion_sensor_2_temperature
         - media_player.spotify 
         - group.mediapc_state
         - group.werkstatt_lights
@@ -120,7 +120,7 @@ mediapc_state:
         - sensor.processor_use
         - sensor.load_1m
         - sensor.memory_free
-        - sensor.disk_use_percent_
+        - sensor.disk_use_percent
         
 werkstatt_lights:
     name: Werkstatt Licht
@@ -176,6 +176,7 @@ stube:
         - sensor.zipatile_touch
         - input_select.zipatile_siren
         - camera.stube
+        - camera.stube_ecke
         - media_player.stube
         - media_player.stube_speaker
         - input_boolean.eg_stube_tv
@@ -306,7 +307,7 @@ mediaroom:
         - media_player.mediazimmer
         - media_player.mediazimmer_speaker
         - media_player.mediaroom_avr_player
-        - input_boolean.1st_mediaroom_beamer
+        - switch.1st_mediaroom_beamer_power
         - group.shield_02_states
         - media_player.mediaroom_avr_player
 

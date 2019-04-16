@@ -20,10 +20,7 @@ homeassistant:
   whitelist_external_dirs:
      - /tmp/
 
-  auth_providers:
-   - type: legacy_api_password
-     api_password: !secret http_password
-
+  
 # Show links to resources in log and frontend
 #introduction:
 
@@ -55,7 +52,7 @@ config:
 
 http:
   # Secrets are defined in the file secrets.yaml
-  #  api_password: !secret http_password
+    api_password: !secret http_password
   # Uncomment this if you are using SSL/TLS, running in Docker container, etc.
     base_url: !secret base_url
 
@@ -83,7 +80,7 @@ discovery:
         - samsung_tv
 
 logger:
-  default: warning
+  default: debug
 
     
 # Allows you to issue voice commands from the frontend in enabled browsers
@@ -146,12 +143,6 @@ mqtt:
 #   publish_topic: hommeassistant/eventstream/master/topic
 
 
-netatmo:
-  api_key: !secret netatmo_api
-  secret_key: !secret netatmo_secret
-  username: !secret default_user_2
-  password: !secret default_password_2 
-
 
 owntracks:
     waypoints: True
@@ -203,7 +194,9 @@ ffmpeg:
 
 camera:
   - platform: doorbird
+    name: "Doorbird"
   - platform: netatmo
+    name: "Welcome"
   - platform: ffmpeg
     name: Mediaroom
     input: !secret mediaroom_cam_secret_url
@@ -236,9 +229,14 @@ notify:
     default_channel: '#home-assistant'
 
 
+netatmo:
+  api_key: !secret netatmo_api
+  secret_key: !secret netatmo_secret
+  username: !secret default_user_2
+  password: !secret default_password_2 
+
 zwave:
-#  usb_path: /dev/ttyACM0
-  usb_path: /dev/serial/by-id/usb-0658_0200-if00
+  usb_path: /dev/ttyACM0
   autoheal: true
   polling_interval: 60000
   config_path: /etc/openzwave/config
@@ -384,7 +382,6 @@ sensor:
 
   - platform: google_travel_time
     name: Marcel to Work
-    scan_interval: 900
     api_key: !secret google_api
     origin: device_tracker.oeusqgsv_marcel
     destination: zone.marcel_work
@@ -393,20 +390,11 @@ sensor:
 
   - platform: google_travel_time
     name: Marcel to Home
-    scan_interval: 900
     api_key: !secret google_api
     origin: device_tracker.oeusqgsv_marcel
     destination: zone.home
     options:
         mode: driving
-
- #- platform: google_travel_time
- #  name: Marcel to Travel Destination
- #  api_key: !secret google_api
- #  origin: device_tracker.oeusqgsv_marcel
- #  destination: input_text.travel_destination_mha
- #  options:
- #      mode: driving        
         
 
   - platform: mqtt
@@ -527,6 +515,8 @@ sensor:
       - daily_summary
       - temperature_low
       - temperature_high
+      - apparent_temperature_max
+      - apparent_temperature_min
       - icon
       - nearest_storm_distance
       

@@ -1,0 +1,72 @@
+input_select:
+  google_home_broadcast_user:
+    name: Google Home Broadcast User
+    options:
+      - Marcel
+      - Jeanette
+      - Leona
+      - Jason
+    initial: 'Marcel'
+
+input_text:
+  google_home_broadcast_text:
+    initial: ""
+    name: Google Home Broadcast Text
+
+  google_home_command:
+    initial: ""
+    name: Google Home Command
+
+notify:
+  - name: Google Home
+    platform: rest
+    resource: http://10.2.151.1:3000/assistant
+    method: POST_JSON
+    message_param_name: command
+    data:
+      user: marcel
+      broadcast: true
+      
+  - name: Google Home Command
+    platform: rest
+    resource: http://10.2.151.1:3000/assistant
+    method: POST_JSON
+    message_param_name: command
+    data:
+      user: marcel
+
+rest_command:
+  google_home_relay_broadcast:
+    url: http://10.2.151.1:3000/assistant
+    method: POST
+    payload: '{"command":"{{ text }}", "user":"{{ user }}", "broadcast":"true"}'
+    content_type:  'application/json; charset=utf-8'
+
+  google_home_relay_command:
+    url: http://10.2.151.1:3000/assistant
+    method: POST
+    payload: '{ "command":"{{ command }}", "user":"{{ user }}" }'
+    content_type:  'application/json; charset=utf-8'
+
+automation:
+- alias: 'Send Google Home Broadcast'
+  trigger:
+    platform: state
+    entity_id: input_text.google_home_broadcast_text
+
+  action:
+    - service: rest_command.google_home_relay_broadcast
+      data_template:
+        user: "{{ states.input_select.google_home_broadcast_user.state }}"
+        text: "{{ states.input_text.google_home_broadcast_text.state }}"
+
+- alias: 'Send Google Home Command'
+  trigger:
+    platform: state
+    entity_id: input_text.google_home_command
+
+  action:
+    - service: rest_command.google_home_relay_command
+      data_template:
+        user: "{{ states.input_select.google_home_broadcast_user.state }}"
+        command: "{{ states.input_text.google_home_command.state }}"        

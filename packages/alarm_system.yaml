@@ -1,0 +1,85 @@
+automation:
+  - alias: 'Trigger alarm while armed away'
+    trigger:
+      - platform: state
+        entity_id: binary_sensor.eg_stube_motion_sensor
+        to: 'on'
+
+    condition:
+      - condition: state
+        entity_id: alarm_control_panel.ha_alarm
+        state: armed_away
+
+    action:
+
+      - service: alarm_control_panel.alarm_trigger
+        entity_id: alarm_control_panel.ha_alarm
+
+      - service:  notify.slack
+        data_template:
+          message: '{{ trigger.from_state.name }} has triggered the Alarm!'
+        data:
+          title: Intrusion Alarm
+          target: "#home-assistant-alerts"
+
+
+
+  - alias: 'Send notification when alarm triggered'
+    trigger:
+      - platform: state
+        entity_id: alarm_control_panel.ha_alarm
+        to: 'triggered'
+    action:
+      - service: rest_command.google_home_relay_broadcast
+        data_template:
+          user: "marcel"
+          text: "Achtung! Der Alarm wurde ausgelöst!"
+
+
+
+  - alias: 'Send notification when alarm activated'
+    trigger:
+      - platform: state
+        entity_id: alarm_control_panel.ha_alarm
+        from: 'pending'
+        to: 'armed_away'
+      - platform: state
+        entity_id: alarm_control_panel.ha_alarm
+        from: 'pending'
+        to: 'armed_home'        
+    action:
+      - service: rest_command.google_home_relay_broadcast
+        data_template:
+          user: "marcel"
+          text: "Achtung! Der Alarm ist nun aktiv!"
+
+  - alias: 'Send notification when alarm to be activated'
+    trigger:
+      - platform: state
+        entity_id: alarm_control_panel.ha_alarm
+        from: 'disarmed'
+        to: 'pending'
+    action:
+      - service: rest_command.google_home_relay_broadcast
+        data_template:
+          user: "marcel"
+          text: "Achtung! Der Alarm wird aktiviert!"
+
+  - alias: 'Send notification when alarm deactivated'
+    trigger:
+      - platform: state
+        entity_id: alarm_control_panel.ha_alarm
+        to: 'disarmed'
+    action:
+      - service: rest_command.google_home_relay_broadcast
+        data_template:
+          user: "marcel"
+          text: "Achtung! Der Alarm wurde deaktiviert!"
+
+script:
+  activate_alarm:
+    alias: "Alarmanlage"
+    sequence:
+      - service: alarm_control_panel.alarm_arm_away
+        entity_id: alarm_control_panel.ha_alarm
+

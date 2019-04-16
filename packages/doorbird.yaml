@@ -1,0 +1,28 @@
+
+automation:
+
+- alias: Doorbird Button
+  trigger:
+    - platform: event
+      event_type: doorbird_front_door_button      
+  action:
+    - service:  notify.slack
+      data_template:
+        message: 'Doorbird Button'
+      data:
+        title: Doorbird Event
+
+    - service: notify.google_home
+      data_template:
+        message: 'Achtung! Es hat jemand an der Tür geklingelt!'              
+
+- alias: Doorbird Motion
+  trigger:
+    - platform: event
+      event_type: doorbird_front_door_motion
+  action:
+    - service:  notify.slack
+      data_template:
+        message: 'Doorbird Motion'
+      data:
+        title: Doorbird Event        
